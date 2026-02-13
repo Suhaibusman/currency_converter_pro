@@ -11,11 +11,11 @@ dependencies:
     sdk: flutter
   
   # State Management
-  flutter_riverpod: ^2.5.1
+  flutter_riverpod: ^3.2.1
   
   # Network
   http: ^1.2.1
-  connectivity_plus: ^6.0.3
+  connectivity_plus: ^7.0.0
   
   # Storage
   shared_preferences: ^2.2.3
@@ -24,30 +24,30 @@ dependencies:
   supabase_flutter: ^2.5.6
   
   # UI & Design
-  google_fonts: ^6.2.1
+  google_fonts: ^8.0.1
   flutter_svg: ^2.0.10+1
   animations: ^2.0.11
   
   # Charts
-  fl_chart: ^0.68.0
+  fl_chart: ^1.1.1
   
   # Utilities
-  intl: ^0.19.0
+  intl: ^0.20.2
   
   # Notifications
-  flutter_local_notifications: ^17.1.2
+  flutter_local_notifications: ^20.1.0
   
   # Background Tasks
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0+3
   
   # Security
-  local_auth: ^2.2.0
+  local_auth: ^3.0.0
   
   # Widgets
-  home_widget: ^0.6.0
+  home_widget: ^0.9.0
   
   # Sharing
-  share_plus: ^9.0.0
+  share_plus: ^12.0.1
   screenshot: ^3.0.0
   
   # Icons
@@ -58,7 +58,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

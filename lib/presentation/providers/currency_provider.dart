@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'settings_provider.dart';
+import '../../services/widget_service.dart';
 import '../../core/network/network_info.dart';
 import '../../data/datasources/local/currency_local_datasource.dart';
 import '../../data/datasources/remote/currency_remote_datasource.dart';
@@ -39,7 +42,7 @@ final getExchangeRatesProvider = Provider((ref) {
 });
 
 final convertCurrencyProvider = Provider((ref) {
-  return ConvertCurrency();
+  return ConvertCurrency(ref.watch(currencyRepositoryProvider));
 });
 
 final getHistoricalDataProvider = Provider((ref) {
@@ -47,7 +50,6 @@ final getHistoricalDataProvider = Provider((ref) {
 });
 
 // State Providers
-final baseCurrencyProvider = StateProvider<String>((ref) => 'USD');
 
 final selectedCurrenciesProvider = StateProvider<List<String>>((ref) {
   return ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'];
@@ -59,12 +61,28 @@ final amountProvider = StateProvider<double>((ref) => 1.0);
 final currencyRatesProvider = FutureProvider<CurrencyRate>((ref) async {
   final baseCurrency = ref.watch(baseCurrencyProvider);
   final useCase = ref.watch(getExchangeRatesProvider);
-  
+
   final result = await useCase(baseCurrency);
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
-    (rates) => rates,
+    (rates) async {
+      // Update Widget Side Effect
+      try {
+        final widgetService = WidgetService();
+        await widgetService.initialize();
+        // We need selected currencies to show in widget
+        // But we can get it from selectedCurrenciesProvider? No, it's a StateProvider.
+        // Actually, we can just use the provider.
+        final selectedCurrencies = ref.read(selectedCurrenciesProvider);
+
+        await widgetService.updateWidget(rates.rates, selectedCurrencies);
+      } catch (e) {
+        // Ignore widget update errors in UI flow
+        print('Widget update failed: $e');
+      }
+      return rates;
+    },
   );
 });
 
@@ -75,7 +93,7 @@ final conversionResultsProvider = Provider<Map<String, double>>((ref) {
   final selectedCurrencies = ref.watch(selectedCurrenciesProvider);
   final amount = ref.watch(amountProvider);
   final convertUseCase = ref.watch(convertCurrencyProvider);
-  
+
   return rates.when(
     data: (ratesData) {
       return convertUseCase.convertToMultiple(
@@ -91,11 +109,11 @@ final conversionResultsProvider = Provider<Map<String, double>>((ref) {
 });
 
 // Conversion History Provider
-final conversionHistoryProvider = 
+final conversionHistoryProvider =
     FutureProvider<List<ConversionHistory>>((ref) async {
   final repository = ref.watch(currencyRepositoryProvider);
   final result = await repository.getConversionHistory();
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (history) => history,
@@ -106,7 +124,7 @@ final conversionHistoryProvider =
 final historicalSnapshotsProvider = FutureProvider<List<Snapshot>>((ref) async {
   final repository = ref.watch(currencyRepositoryProvider);
   final result = await repository.getSnapshots();
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (snapshots) => snapshots,
@@ -117,7 +135,7 @@ final historicalSnapshotsProvider = FutureProvider<List<Snapshot>>((ref) async {
 final favoritePairsProvider = FutureProvider<List<String>>((ref) async {
   final repository = ref.watch(currencyRepositoryProvider);
   final result = await repository.getFavoritePairs();
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (pairs) => pairs,
@@ -128,7 +146,7 @@ final favoritePairsProvider = FutureProvider<List<String>>((ref) async {
 final recentSearchesProvider = FutureProvider<List<String>>((ref) async {
   final repository = ref.watch(currencyRepositoryProvider);
   final result = await repository.getRecentSearches();
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (searches) => searches,

@@ -42,7 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ? const Icon(Icons.check)
                     : null,
                 onTap: () {
-                  ref.read(themeModeNotifier).setTheme(mode);
+                  ref.read(themeModeProvider.notifier).setTheme(mode);
                   Navigator.pop(context);
                 },
               );
@@ -92,9 +92,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showBaseCurrencySelector() async {
     final recentSearches = await ref.read(recentSearchesProvider.future);
-    
+
     if (!mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -102,8 +102,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) => CurrencySelector(
         selectedCurrency: ref.read(baseCurrencyProvider),
         onCurrencySelected: (currency) {
-          ref.read(baseCurrencyProvider.notifier).state = currency;
-          ref.read(settingsRepositoryProvider).setBaseCurrency(currency);
+          ref.read(baseCurrencyProvider.notifier).setBaseCurrency(currency);
         },
         recentSearches: recentSearches,
       ),
@@ -125,10 +124,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       final authenticated = await _biometricService.authenticate();
       if (authenticated) {
-        ref.read(biometricEnabledNotifier).setBiometric(true);
+        ref.read(biometricEnabledProvider.notifier).setBiometric(true);
       }
     } else {
-      ref.read(biometricEnabledNotifier).setBiometric(false);
+      ref.read(biometricEnabledProvider.notifier).setBiometric(false);
     }
   }
 
@@ -168,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   divisions: 8,
                   label: fontSize.round().toString(),
                   onChanged: (value) {
-                    ref.read(fontSizeNotifier).setFontSize(value);
+                    ref.read(fontSizeProvider.notifier).setFontSize(value);
                   },
                 ),
               ),
@@ -186,7 +185,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: _showBaseCurrencySelector,
               ),
               ListTile(
-                leading: const Icon(Icons.decimal_increase),
+                leading: const Icon(Icons.plus_one),
                 title: const Text('Decimal Precision'),
                 subtitle: Text('$decimalPrecision decimal places'),
                 trailing: Row(
@@ -196,7 +195,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: const Icon(Icons.remove),
                       onPressed: decimalPrecision > 2
                           ? () => ref
-                              .read(decimalPrecisionNotifier)
+                              .read(decimalPrecisionProvider.notifier)
                               .setPrecision(decimalPrecision - 1)
                           : null,
                     ),
@@ -204,7 +203,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: const Icon(Icons.add),
                       onPressed: decimalPrecision < 8
                           ? () => ref
-                              .read(decimalPrecisionNotifier)
+                              .read(decimalPrecisionProvider.notifier)
                               .setPrecision(decimalPrecision + 1)
                           : null,
                     ),
@@ -225,7 +224,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                   onChanged: (value) {
                     if (value != null) {
-                      ref.read(roundingModeNotifier).setRoundingMode(value);
+                      ref
+                          .read(roundingModeProvider.notifier)
+                          .setRoundingMode(value);
                     }
                   },
                 ),

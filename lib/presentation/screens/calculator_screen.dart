@@ -6,19 +6,29 @@ import '../widgets/currency_selector.dart';
 import '../theme/app_theme.dart';
 import '../../core/constants/theme_constants.dart';
 import '../providers/theme_provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
-class CalculatorScreen extends ConsumerWidget {
+class CalculatorScreen extends ConsumerStatefulWidget {
   const CalculatorScreen({super.key});
+
+  @override
+  ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
+  final ScreenshotController screenshotController = ScreenshotController();
 
   void _showCurrencySelector(
     BuildContext context,
-    WidgetRef ref,
     bool isFrom,
   ) async {
     final recentSearches = await ref.read(recentSearchesProvider.future);
-    
+
     if (!context.mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -41,24 +51,30 @@ class CalculatorScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final calculatorState = ref.watch(calculatorProvider);
     final ratesAsync = ref.watch(currencyRatesProvider);
     final themeMode = ref.watch(themeModeProvider);
-    
+
     ThemeColors colors;
     if (themeMode == AppThemeMode.systemSync) {
       final brightness = MediaQuery.of(context).platformBrightness;
       colors = ThemeConstants.getSystemTheme(brightness);
     } else {
-      colors = ThemeConstants.themes[themeMode] ?? 
-               ThemeConstants.themes[AppThemeMode.midnightLuxe]!;
+      colors = ThemeConstants.themes[themeMode] ??
+          ThemeConstants.themes[AppThemeMode.midnightLuxe]!;
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calculator'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () => _shareScreenshot(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -69,10 +85,10 @@ class CalculatorScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _showCurrencySelector(context, ref, true),
+                    onTap: () => _showCurrencySelector(context, true),
                     child: Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: AppTheme.glassmorphism(colors),
+                      decoration: AppTheme.glassmorphism(context),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -100,10 +116,10 @@ class CalculatorScreen extends ConsumerWidget {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => _showCurrencySelector(context, ref, false),
+                    onTap: () => _showCurrencySelector(context, false),
                     child: Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: AppTheme.glassmorphism(colors),
+                      decoration: AppTheme.glassmorphism(context),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -132,45 +148,54 @@ class CalculatorScreen extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: AppTheme.glassmorphism(colors),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  calculatorState.expression.isEmpty
-                      ? '0'
-                      : calculatorState.expression,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.right,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  calculatorState.display,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+            child: Screenshot(
+              controller: screenshotController,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: AppTheme.glassmorphism(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      calculatorState.expression.isEmpty
+                          ? '0'
+                          : calculatorState.expression,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.right,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      calculatorState.display,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.right,
+                    ),
+                    if (calculatorState.result != null)
+                      ratesAsync.when(
+                        data: (rates) {
+                          final converted = rates.convert(
+                            calculatorState.fromCurrency,
+                            calculatorState.toCurrency,
+                            calculatorState.result!,
+                          );
+                          return Text(
+                            '≈ ${converted.toStringAsFixed(4)} ${calculatorState.toCurrency}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: colors.accent,
+                                ),
+                            textAlign: TextAlign.right,
+                          );
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
                       ),
-                  textAlign: TextAlign.right,
+                  ],
                 ),
-                if (calculatorState.result != null)
-                  ratesAsync.when(
-                    data: (rates) {
-                      final converted = rates.convert(
-                        calculatorState.fromCurrency,
-                        calculatorState.toCurrency,
-                        calculatorState.result!,
-                      );
-                      return Text(
-                        '≈ ${converted.toStringAsFixed(4)} ${calculatorState.toCurrency}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: colors.accent,
-                            ),
-                        textAlign: TextAlign.right,
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-              ],
+              ),
             ),
           ),
 
@@ -266,12 +291,40 @@ class CalculatorScreen extends ConsumerWidget {
       case '×':
       case '÷':
       case '%':
-        final operator = label == '×' ? '*' : label == '÷' ? '/' : label;
+        final operator = label == '×'
+            ? '*'
+            : label == '÷'
+                ? '/'
+                : label;
         notifier.appendOperator(operator);
         break;
       default:
         notifier.appendNumber(label);
         break;
+    }
+  }
+
+  Future<void> _shareScreenshot(BuildContext context) async {
+    try {
+      final image = await screenshotController.capture();
+      if (image == null) return;
+
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/calculator_result.png');
+      await file.writeAsBytes(image);
+
+      if (context.mounted) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: 'Check out this conversion!',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share: $e')),
+        );
+      }
     }
   }
 }

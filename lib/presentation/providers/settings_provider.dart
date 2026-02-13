@@ -1,12 +1,12 @@
-import 'package:currency_converter_pro/data/datasources/local/settings_local_datasource.dart';
-import 'package:currency_converter_pro/data/repositories/settings_repository_impl.dart';
-import 'package:currency_converter_pro/presentation/providers/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import '../../data/datasources/local/settings_local_datasource.dart';
+import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/settings_repository.dart';
-import 'theme_provider.dart';
+import 'currency_provider.dart';
 
-
-final settingsLocalDataSourceProvider = Provider<SettingsLocalDataSource>((ref) {
+final settingsLocalDataSourceProvider =
+    Provider<SettingsLocalDataSource>((ref) {
   return SettingsLocalDataSourceImpl(ref.watch(sharedPreferencesProvider));
 });
 
@@ -14,30 +14,40 @@ final settingsRepositoryProvider = Provider((ref) {
   return SettingsRepositoryImpl(ref.watch(settingsLocalDataSourceProvider));
 });
 
-final baseCurrencyProvider = FutureProvider<String>((ref) async {
-  final repository = ref.watch(settingsRepositoryProvider);
-  final result = await repository.getBaseCurrency();
-  return result.fold(
-    (failure) => 'USD',
-    (currency) => currency,
-  );
+final baseCurrencyProvider =
+    StateNotifierProvider<BaseCurrencyNotifier, String>((ref) {
+  return BaseCurrencyNotifier(ref.watch(settingsRepositoryProvider));
 });
 
-final fontSizeProvider = FutureProvider<double>((ref) async {
-  final repository = ref.watch(settingsRepositoryProvider);
-  final result = await repository.getFontSize();
-  return result.fold(
-    (failure) => 16.0,
-    (size) => size,
-  );
+class BaseCurrencyNotifier extends StateNotifier<String> {
+  final SettingsRepository repository;
+
+  BaseCurrencyNotifier(this.repository) : super('USD') {
+    _loadBaseCurrency();
+  }
+
+  Future<void> _loadBaseCurrency() async {
+    final result = await repository.getBaseCurrency();
+    result.fold(
+      (failure) => null,
+      (currency) => state = currency,
+    );
+  }
+
+  Future<void> setBaseCurrency(String currency) async {
+    state = currency;
+    await repository.setBaseCurrency(currency);
+  }
+}
+
+final fontSizeProvider = StateNotifierProvider<FontSizeNotifier, double>((ref) {
+  return FontSizeNotifier(ref.watch(settingsRepositoryProvider));
 });
-
-
 
 class FontSizeNotifier extends StateNotifier<double> {
   final SettingsRepository repository;
 
-  FontSizeNotifier(this.repository) : super(14.0) {
+  FontSizeNotifier(this.repository) : super(16.0) {
     _loadFontSize();
   }
 
@@ -56,7 +66,7 @@ class FontSizeNotifier extends StateNotifier<double> {
 }
 
 // Decimal Precision Provider
-final decimalPrecisionProvider = 
+final decimalPrecisionProvider =
     StateNotifierProvider<DecimalPrecisionNotifier, int>(
   (ref) {
     return DecimalPrecisionNotifier(ref.watch(settingsRepositoryProvider));
@@ -85,35 +95,15 @@ class DecimalPrecisionNotifier extends StateNotifier<int> {
 }
 
 // Rounding Mode Provider
-final roundingModeProvider = StateNotifierProvider<RoundingModeNotifier, String>(
+final roundingModeProvider =
+    StateNotifierProvider<RoundingModeNotifier, String>(
   (ref) {
     return RoundingModeNotifier(ref.watch(settingsRepositoryProvider));
   },
 );
 
-class RoundingModeNotifier extends StateNotifier<String> {
-  final SettingsRepository repository;
-
-  RoundingModeNotifier(this.repository) : super('halfUp') {
-    _loadRoundingMode();
-  }
-
-  Future<void> _loadRoundingMode() async {
-    final result = await repository.getRoundingMode();
-    result.fold(
-      (failure) => null,
-      (mode) => state = mode,
-    );
-  }
-
-  Future<void> setRoundingMode(String mode) async {
-    state = mode;
-    await repository.setRoundingMode(mode);
-  }
-}
-
 // Biometric Enabled Provider
-final biometricEnabledProvider = 
+final biometricEnabledProvider =
     StateNotifierProvider<BiometricEnabledNotifier, bool>(
   (ref) {
     return BiometricEnabledNotifier(ref.watch(settingsRepositoryProvider));
@@ -166,5 +156,26 @@ class LanguageNotifier extends StateNotifier<String> {
   Future<void> setLanguage(String language) async {
     state = language;
     await repository.setLanguage(language);
+  }
+}
+
+class RoundingModeNotifier extends StateNotifier<String> {
+  final SettingsRepository repository;
+
+  RoundingModeNotifier(this.repository) : super('halfUp') {
+    _loadRoundingMode();
+  }
+
+  Future<void> _loadRoundingMode() async {
+    final result = await repository.getRoundingMode();
+    result.fold(
+      (failure) => null,
+      (mode) => state = mode,
+    );
+  }
+
+  Future<void> setRoundingMode(String mode) async {
+    state = mode;
+    await repository.setRoundingMode(mode);
   }
 }

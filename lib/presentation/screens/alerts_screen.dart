@@ -39,7 +39,10 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                   Icon(
                     Icons.notifications_none,
                     size: 64,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -66,7 +69,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
           );
         },
         loading: () => const LoadingWidget(message: 'Loading alerts...'),
-        error: (error, stack) => ErrorWidget(
+        error: (error, stack) => CustomErrorWidget(
           message: error.toString(),
           onRetry: () {
             ref.invalidate(alertsProvider);
@@ -82,6 +85,8 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
 
   Widget _buildAlertCard(Alert alert) {
     final actions = ref.read(alertActionsProvider);
+
+    final description = alert.description ?? '';
 
     return Dismissible(
       key: Key(alert.id),
@@ -114,7 +119,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
             '${alert.fromCurrency}/${alert.toCurrency}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          subtitle: Text(alert.description),
+          subtitle: Text(description),
           trailing: Switch(
             value: alert.isEnabled,
             onChanged: (value) {
@@ -134,6 +139,8 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
         return Icons.arrow_downward;
       case AlertType.percentageChange:
         return Icons.percent;
+      case AlertType.change:
+        return Icons.change_circle;
     }
   }
 }
@@ -159,9 +166,9 @@ class _AddAlertDialogState extends ConsumerState<AddAlertDialog> {
 
   void _showCurrencySelector(bool isFrom) async {
     final recentSearches = await ref.read(recentSearchesProvider.future);
-    
+
     if (!mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -193,17 +200,17 @@ class _AddAlertDialogState extends ConsumerState<AddAlertDialog> {
 
     final alert = Alert(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      fromCurrency: _fromCurrency,
-      toCurrency: _toCurrency,
+      baseCurrency: _fromCurrency,
+      targetCurrency: _toCurrency,
       type: _alertType,
-      threshold: threshold,
-      isEnabled: true,
+      targetRate: threshold,
+      isActive: true,
       createdAt: DateTime.now(),
     );
 
     ref.read(alertActionsProvider).saveAlert(alert);
     Navigator.pop(context);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Alert created')),
     );
@@ -259,7 +266,8 @@ class _AddAlertDialogState extends ConsumerState<AddAlertDialog> {
             const SizedBox(height: 16),
             TextField(
               controller: _thresholdController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: _alertType == AlertType.percentageChange
                     ? 'Percentage (%)'
@@ -290,6 +298,8 @@ class _AddAlertDialogState extends ConsumerState<AddAlertDialog> {
         return 'Rate goes below';
       case AlertType.percentageChange:
         return 'Percentage change';
+      case AlertType.change:
+        return 'Rate changes';
     }
   }
 }

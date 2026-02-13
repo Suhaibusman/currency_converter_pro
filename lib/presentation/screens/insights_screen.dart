@@ -41,8 +41,9 @@ class InsightsScreen extends ConsumerWidget {
                 child: _buildInsights(context, ref, snapshots, rates.rates),
               );
             },
-            loading: () => const LoadingWidget(message: 'Generating insights...'),
-            error: (error, stack) => ErrorWidget(
+            loading: () =>
+                const LoadingWidget(message: 'Generating insights...'),
+            error: (error, stack) => CustomErrorWidget(
               message: error.toString(),
               onRetry: () {
                 ref.invalidate(historicalSnapshotsProvider);
@@ -51,7 +52,7 @@ class InsightsScreen extends ConsumerWidget {
           );
         },
         loading: () => const LoadingWidget(),
-        error: (error, stack) => ErrorWidget(message: error.toString()),
+        error: (error, stack) => CustomErrorWidget(message: error.toString()),
       ),
     );
   }
@@ -74,7 +75,8 @@ class InsightsScreen extends ConsumerWidget {
     );
   }
 
-  List<Insight> _generateInsights(List snapshots, Map<String, double> currentRates) {
+  List<Insight> _generateInsights(
+      List snapshots, Map<String, double> currentRates) {
     final List<Insight> insights = [];
 
     if (snapshots.length < 2) return insights;
@@ -94,11 +96,14 @@ class InsightsScreen extends ConsumerWidget {
 
         if (rates.length >= 2) {
           final change = ((rates.last - rates.first) / rates.first) * 100;
-          
+
           if (change.abs() > 1.0) {
             insights.add(Insight(
-              title: change > 0 ? '$currency Strengthening' : '$currency Weakening',
-              description: '$currency has ${change > 0 ? 'increased' : 'decreased'} by ${change.abs().toStringAsFixed(2)}% in the last 7 days',
+              title: change > 0
+                  ? '$currency Strengthening'
+                  : '$currency Weakening',
+              description:
+                  '$currency has ${change > 0 ? 'increased' : 'decreased'} by ${change.abs().toStringAsFixed(2)}% in the last 7 days',
               icon: change > 0 ? Icons.trending_up : Icons.trending_down,
               color: change > 0 ? Colors.green : Colors.red,
               type: InsightType.trend,
@@ -107,15 +112,16 @@ class InsightsScreen extends ConsumerWidget {
 
           // Volatility check
           final avg = rates.reduce((a, b) => a + b) / rates.length;
-          final variance = rates
-              .map((r) => (r - avg) * (r - avg))
-              .reduce((a, b) => a + b) / rates.length;
+          final variance =
+              rates.map((r) => (r - avg) * (r - avg)).reduce((a, b) => a + b) /
+                  rates.length;
           final volatility = (variance.abs() / avg) * 100;
 
           if (volatility > 2.0) {
             insights.add(Insight(
               title: 'High Volatility: $currency',
-              description: '$currency is showing high volatility with ${volatility.toStringAsFixed(2)}% variance',
+              description:
+                  '$currency is showing high volatility with ${volatility.toStringAsFixed(2)}% variance',
               icon: Icons.warning_amber_rounded,
               color: Colors.orange,
               type: InsightType.volatility,
@@ -141,7 +147,8 @@ class InsightsScreen extends ConsumerWidget {
           if ((current - low).abs() < (high - low) * 0.05) {
             insights.add(Insight(
               title: '$currency Near 30-Day Low',
-              description: '$currency is trading near its 30-day low of ${low.toStringAsFixed(6)}',
+              description:
+                  '$currency is trading near its 30-day low of ${low.toStringAsFixed(6)}',
               icon: Icons.south,
               color: Colors.blue,
               type: InsightType.milestone,
@@ -149,7 +156,8 @@ class InsightsScreen extends ConsumerWidget {
           } else if ((high - current).abs() < (high - low) * 0.05) {
             insights.add(Insight(
               title: '$currency Near 30-Day High',
-              description: '$currency is trading near its 30-day high of ${high.toStringAsFixed(6)}',
+              description:
+                  '$currency is trading near its 30-day high of ${high.toStringAsFixed(6)}',
               icon: Icons.north,
               color: Colors.purple,
               type: InsightType.milestone,
@@ -162,7 +170,8 @@ class InsightsScreen extends ConsumerWidget {
     // Travel recommendations
     insights.add(Insight(
       title: 'Travel Mode Available',
-      description: 'Enable Travel Mode in settings to track currencies for your next trip',
+      description:
+          'Enable Travel Mode in settings to track currencies for your next trip',
       icon: Icons.flight_takeoff,
       color: Colors.teal,
       type: InsightType.tip,

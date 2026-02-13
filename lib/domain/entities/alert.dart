@@ -1,12 +1,33 @@
 import 'package:equatable/equatable.dart';
 
-class Alert extends Equatable {
+enum AlertType {
+  above,
+  below,
+  change,
+  percentageChange;
+
+  String get displayName {
+    switch (this) {
+      case AlertType.above:
+        return 'Above';
+      case AlertType.below:
+        return 'Below';
+      case AlertType.change:
+        return 'Change';
+      case AlertType.percentageChange:
+        return 'Percentage Change';
+    }
+  }
+}
+
+class Alert {
   final String id;
   final String baseCurrency;
   final String targetCurrency;
-  final String type; // 'above', 'below', 'percentage_change'
+  final AlertType type;
   final double targetRate;
   final bool isActive;
+  final String? description;
   final DateTime createdAt;
   final DateTime? triggeredAt;
 
@@ -17,29 +38,25 @@ class Alert extends Equatable {
     required this.type,
     required this.targetRate,
     required this.isActive,
+    this.description,
     required this.createdAt,
     this.triggeredAt,
   });
 
-  @override
-  List<Object?> get props => [
-        id,
-        baseCurrency,
-        targetCurrency,
-        type,
-        targetRate,
-        isActive,
-        createdAt,
-        triggeredAt,
-      ];
+  // Add getters for backward compatibility
+  String get fromCurrency => baseCurrency;
+  String get toCurrency => targetCurrency;
+  double get threshold => targetRate;
+  bool get isEnabled => isActive;
 
   Alert copyWith({
     String? id,
     String? baseCurrency,
     String? targetCurrency,
-    String? type,
+    AlertType? type,
     double? targetRate,
     bool? isActive,
+    String? description,
     DateTime? createdAt,
     DateTime? triggeredAt,
   }) {
@@ -50,6 +67,7 @@ class Alert extends Equatable {
       type: type ?? this.type,
       targetRate: targetRate ?? this.targetRate,
       isActive: isActive ?? this.isActive,
+      description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       triggeredAt: triggeredAt ?? this.triggeredAt,
     );
@@ -60,9 +78,10 @@ class Alert extends Equatable {
       'id': id,
       'baseCurrency': baseCurrency,
       'targetCurrency': targetCurrency,
-      'type': type,
+      'type': type.name,
       'targetRate': targetRate,
       'isActive': isActive,
+      'description': description,
       'createdAt': createdAt.toIso8601String(),
       'triggeredAt': triggeredAt?.toIso8601String(),
     };
@@ -70,29 +89,17 @@ class Alert extends Equatable {
 
   factory Alert.fromJson(Map<String, dynamic> json) {
     return Alert(
-      id: json['id'] as String,
-      baseCurrency: json['baseCurrency'] as String,
-      targetCurrency: json['targetCurrency'] as String,
-      type: json['type'] as String,
-      targetRate: (json['targetRate'] as num).toDouble(),
-      isActive: json['isActive'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'],
+      baseCurrency: json['baseCurrency'],
+      targetCurrency: json['targetCurrency'],
+      type: AlertType.values.firstWhere((e) => e.name == json['type']),
+      targetRate: json['targetRate'],
+      isActive: json['isActive'],
+      description: json['description'],
+      createdAt: DateTime.parse(json['createdAt']),
       triggeredAt: json['triggeredAt'] != null
-          ? DateTime.parse(json['triggeredAt'] as String)
+          ? DateTime.parse(json['triggeredAt'])
           : null,
     );
-  }
-
-  String get displayText {
-    switch (type) {
-      case 'above':
-        return '$targetCurrency above $targetRate $baseCurrency';
-      case 'below':
-        return '$targetCurrency below $targetRate $baseCurrency';
-      case 'percentage_change':
-        return '$targetCurrency changes by ${targetRate}%';
-      default:
-        return 'Unknown alert type';
-    }
   }
 }

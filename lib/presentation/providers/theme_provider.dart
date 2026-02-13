@@ -1,26 +1,25 @@
 import 'package:currency_converter_pro/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/constants/theme_constants.dart';
-import '../../data/datasources/local/settings_local_datasource.dart';
-import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/settings_repository.dart';
-import 'currency_provider.dart';
-
+import 'settings_provider.dart';
 
 final currentThemeProvider = FutureProvider<ThemeData>((ref) async {
   final settingsRepo = ref.watch(settingsRepositoryProvider);
-  
+
   final themeResult = await settingsRepo.getTheme();
   final colorResult = await settingsRepo.getCustomColor();
   final fontSizeResult = await settingsRepo.getFontSize();
-  
+
   return themeResult.fold(
     (failure) => AppTheme.getTheme('midnight_luxe'),
     (themeName) => colorResult.fold(
       (failure) => AppTheme.getTheme(themeName),
       (customColor) => fontSizeResult.fold(
-        (failure) => AppTheme.getTheme(themeName, customColor: Color(customColor)),
+        (failure) =>
+            AppTheme.getTheme(themeName, customColor: Color(customColor)),
         (fontSize) => AppTheme.getTheme(
           themeName,
           customColor: Color(customColor),
@@ -31,14 +30,10 @@ final currentThemeProvider = FutureProvider<ThemeData>((ref) async {
   );
 });
 // Settings Repository Provider
-final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
-  return SettingsRepositoryImpl(
-    SettingsLocalDataSourceImpl(ref.watch(sharedPreferencesProvider)),
-  );
-});
 
 // Theme Mode Provider
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, AppThemeMode>(
+final themeModeProvider =
+    StateNotifierProvider<ThemeModeNotifier, AppThemeMode>(
   (ref) {
     return ThemeModeNotifier(ref.watch(settingsRepositoryProvider));
   },
@@ -104,11 +99,12 @@ class CustomColorNotifier extends StateNotifier<Color> {
 final themeDataProvider = Provider<ThemeData>((ref) {
   final themeMode = ref.watch(themeModeProvider);
   final customColor = ref.watch(customColorProvider);
-  
+
   ThemeColors colors;
-  
+
   if (themeMode == AppThemeMode.systemSync) {
-    final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final brightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
     colors = ThemeConstants.getSystemTheme(brightness);
   } else if (themeMode == AppThemeMode.custom) {
     colors = ThemeColors(
@@ -126,7 +122,7 @@ final themeDataProvider = Provider<ThemeData>((ref) {
   } else {
     colors = ThemeConstants.themes[themeMode]!;
   }
-  
+
   return ThemeData(
     useMaterial3: true,
     brightness: _getBrightness(colors),
@@ -152,7 +148,7 @@ final themeDataProvider = Provider<ThemeData>((ref) {
 });
 
 Brightness _getBrightness(ThemeColors colors) {
-  return colors.background.computeLuminance() > 0.5 
-      ? Brightness.light 
+  return colors.background.computeLuminance() > 0.5
+      ? Brightness.light
       : Brightness.dark;
 }

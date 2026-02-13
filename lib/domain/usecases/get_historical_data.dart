@@ -12,6 +12,13 @@ class GetHistoricalData {
     return await repository.getSnapshots(limit: days);
   }
 
+  Future<Either<Failure, Map<String, double>>> execute(
+    String currency,
+    int days,
+  ) async {
+    return await repository.getHistoricalData(currency, days);
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> getStatistics({
     required String currency,
     required List<Snapshot> snapshots,
@@ -48,12 +55,12 @@ class GetHistoricalData {
 
   double _calculateVolatility(List<double> rates) {
     if (rates.length < 2) return 0.0;
-    
+
     final avg = rates.reduce((a, b) => a + b) / rates.length;
-    final variance = rates
-        .map((r) => (r - avg) * (r - avg))
-        .reduce((a, b) => a + b) / rates.length;
-    
+    final variance =
+        rates.map((r) => (r - avg) * (r - avg)).reduce((a, b) => a + b) /
+            rates.length;
+
     return variance;
   }
 }

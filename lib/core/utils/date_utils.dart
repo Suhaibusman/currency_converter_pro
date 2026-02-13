@@ -1,6 +1,34 @@
 import '../constants/app_constants.dart';
 
 class AppDateUtils {
+  static DateTime now() {
+    return DateTime.now();
+  }
+  
+  static int getCurrentTimestamp() {
+    return DateTime.now().millisecondsSinceEpoch;
+  }
+  
+  static DateTime getDateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+  
+  static List<DateTime> getDayRange(DateTime start, DateTime end) {
+    List<DateTime> days = [];
+    DateTime current = getDateOnly(start);
+    DateTime endDate = getDateOnly(end);
+    
+    while (current.isBefore(endDate) || current.isAtSameMomentAs(endDate)) {
+      days.add(current);
+      current = current.add(const Duration(days: 1));
+    }
+    
+    return days;
+  }
+  
+  static String formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
   static bool shouldUpdate(int? lastUpdateTimestamp) {
     if (lastUpdateTimestamp == null) return true;
     
@@ -40,9 +68,7 @@ class AppDateUtils {
     }
   }
 
-  static String formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
+  
 
   static String formatDateTime(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';

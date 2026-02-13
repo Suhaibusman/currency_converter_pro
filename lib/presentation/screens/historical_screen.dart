@@ -6,6 +6,7 @@ import '../widgets/common_widgets.dart';
 import '../widgets/rate_chart.dart';
 import '../widgets/currency_selector.dart';
 import '../../domain/usecases/get_historical_data.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HistoricalScreen extends ConsumerStatefulWidget {
   const HistoricalScreen({super.key});
@@ -23,15 +24,16 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
 
   void _showCurrencySelector(bool isCompare) async {
     final recentSearches = await ref.read(recentSearchesProvider.future);
-    
+
     if (!context.mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => CurrencySelector(
-        selectedCurrency: isCompare ? (_compareCurrency ?? 'GBP') : _selectedCurrency,
+        selectedCurrency:
+            isCompare ? (_compareCurrency ?? 'GBP') : _selectedCurrency,
         onCurrencySelected: (currency) {
           setState(() {
             if (isCompare) {
@@ -70,6 +72,11 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
             },
             tooltip: 'Compare currencies',
           ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _exportData,
+            tooltip: 'Export CSV',
+          ),
         ],
       ),
       body: Column(
@@ -97,7 +104,10 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
                         children: [
                           Text(
                             _selectedCurrency,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -130,7 +140,10 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
                           children: [
                             Text(
                               _compareCurrency!,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
@@ -191,14 +204,18 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
           Expanded(
             child: FutureBuilder(
               future: Future.wait([
-                historicalUseCase.getData(_selectedCurrency, _selectedDays).then(
+                historicalUseCase
+                    .execute(_selectedCurrency, _selectedDays)
+                    .then(
                       (result) => result.fold(
                         (failure) => throw Exception(failure.message),
                         (data) => data,
                       ),
                     ),
                 if (_compareCurrency != null)
-                  historicalUseCase.getData(_compareCurrency!, _selectedDays).then(
+                  historicalUseCase
+                      .execute(_compareCurrency!, _selectedDays)
+                      .then(
                         (result) => result.fold(
                           (failure) => throw Exception(failure.message),
                           (data) => data,
@@ -207,11 +224,12 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
               ]),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingWidget(message: 'Loading historical data...');
+                  return const LoadingWidget(
+                      message: 'Loading historical data...');
                 }
 
                 if (snapshot.hasError) {
-                  return ErrorWidget(
+                  return CustomErrorWidget(
                     message: snapshot.error.toString(),
                     onRetry: () {
                       setState(() {});
@@ -221,10 +239,11 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
 
                 final data = snapshot.data as List<Map<String, double>>;
                 final primaryData = data[0];
-                
+
                 if (primaryData.isEmpty) {
                   return const Center(
-                    child: Text('No historical data available yet.\nData will be collected over time.'),
+                    child: Text(
+                        'No historical data available yet.\nData will be collected over time.'),
                   );
                 }
 
@@ -329,9 +348,7 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
                   'Change',
                   '${change >= 0 ? '+' : ''}${change.toStringAsFixed(2)}%',
                   change >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-                  change >= 0 
-                      ? Colors.green 
-                      : Colors.red,
+                  change >= 0 ? Colors.green : Colors.red,
                 ),
               ),
             ],
@@ -341,7 +358,8 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -375,6 +393,55 @@ class _HistoricalScreenState extends ConsumerState<HistoricalScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _exportData() async {
+    final historicalUseCase = ref.read(getHistoricalDataProvider);
+    final primaryDataResult =
+        await historicalUseCase.execute(_selectedCurrency, _selectedDays);
+
+    Map<String, double> primaryData = {};
+    primaryDataResult.fold((l) => null, (r) => primaryData = r);
+
+    if (primaryData.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No data to export')),
+        );
+      }
+      return;
+    }
+
+    Map<String, double>? compareData;
+    if (_compareCurrency != null) {
+      final compareResult =
+          await historicalUseCase.execute(_compareCurrency!, _selectedDays);
+      compareResult.fold((l) => null, (r) => compareData = r);
+    }
+
+    final buffer = StringBuffer();
+    // Header
+    buffer.write('Date,${_selectedCurrency}');
+    if (_compareCurrency != null) {
+      buffer.write(',${_compareCurrency!}');
+    }
+    buffer.writeln();
+
+    // Data
+    final sortedKeys = primaryData.keys.toList()..sort();
+    for (final date in sortedKeys) {
+      buffer.write('$date,${primaryData[date]}');
+      if (_compareCurrency != null && compareData != null) {
+        buffer.write(',${compareData![date] ?? ""}');
+      }
+      buffer.writeln();
+    }
+
+    // Share
+    await Share.share(
+      buffer.toString(),
+      subject: 'Currency History Export',
     );
   }
 }

@@ -51,24 +51,43 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
-      child: const MyApp(),
+      child: MyApp(
+        initialBiometricEnabled:
+            sharedPreferences.getBool(AppConstants.biometricEnabledKey) ??
+                false,
+      ),
     ),
   );
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  const MyApp({super.key});
+  final bool initialBiometricEnabled;
+
+  const MyApp({
+    super.key,
+    required this.initialBiometricEnabled,
+  });
 
   @override
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  late bool _isCheckingAuth;
+  late bool _isAuthenticated;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkBiometric();
+
+    // meaningful initial state
+    _isAuthenticated = !widget.initialBiometricEnabled;
+    _isCheckingAuth = widget.initialBiometricEnabled;
+
+    if (widget.initialBiometricEnabled) {
+      _checkBiometricAuth();
+    }
   }
 
   @override
@@ -80,26 +99,48 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkBiometric();
+      // Re-check preference in case it changed in settings while app was backgrounded (unlikely but possible)
+      // or if we just want to re-auth on resume
+      final biometricEnabled = ref.read(biometricEnabledProvider);
+
+      if (biometricEnabled && _isAuthenticated) {
+        setState(() {
+          _isAuthenticated = false;
+          _isCheckingAuth = true;
+        });
+        _checkBiometricAuth();
+      }
     }
   }
 
-  Future<void> _checkBiometric() async {
-    final biometricEnabled = await ref
-        .read(settingsRepositoryProvider)
-        .getBiometricEnabled();
-    
-    biometricEnabled.fold(
-      (failure) => null,
-      (enabled) async {
-        if (enabled) {
-          final authenticated = await BiometricService().authenticate();
-          if (!authenticated) {
-            SystemNavigator.pop();
-          }
-        }
-      },
-    );
+  Future<void> _checkBiometricAuth() async {
+    // Double check with latest provider state if available, but for now rely on logic
+    final biometricService = BiometricService();
+    final isAvailable = await biometricService.isAvailable();
+
+    if (!isAvailable) {
+      // Fallback if hardware not available
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = true;
+          _isCheckingAuth = false;
+        });
+      }
+      return;
+    }
+
+    final authenticated = await biometricService.authenticate();
+
+    if (mounted) {
+      setState(() {
+        _isAuthenticated = authenticated;
+        _isCheckingAuth = false;
+      });
+    }
+
+    if (!authenticated) {
+      // Keep on lock screen, user can retry
+    }
   }
 
   @override
@@ -107,26 +148,76 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     final themeAsync = ref.watch(currentThemeProvider);
     final fontSizeAsync = ref.watch(fontSizeProvider);
 
-    return themeAsync.when(
-      data: (themeData) => fontSizeAsync.when(
-        data: (fontSize) => MaterialApp(
-          title: 'Currency Converter Pro',
-          theme: themeData,
-          debugShowCheckedModeBanner: false,
-          home: const HomeScreen(),
-        ),
-        loading: () => const MaterialApp(
-          home: Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
-        ),
-        error: (_, __) => MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: Text('Error loading font size'),
+    // Auth Loading Screen
+    if (_isCheckingAuth) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.black, // Dark background for loading
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.fingerprint, size: 80, color: Colors.blueAccent),
+                SizedBox(height: 24),
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Verifying Identity...',
+                    style: TextStyle(color: Colors.white)),
+              ],
             ),
           ),
         ),
+      );
+    }
+
+    // Auth Failed Screen
+    if (!_isAuthenticated) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline,
+                    size: 80, color: Colors.redAccent),
+                const SizedBox(height: 24),
+                const Text('Authentication Required',
+                    style: TextStyle(color: Colors.white, fontSize: 20)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isCheckingAuth = true;
+                    });
+                    _checkBiometricAuth();
+                  },
+                  child: const Text('Tap to Unlock'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Main App
+    return themeAsync.when(
+      data: (themeData) => MaterialApp(
+        title: 'Currency Converter Pro',
+        theme: themeData,
+        debugShowCheckedModeBanner: false,
+        home: const HomeScreen(),
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(fontSizeAsync / 16.0),
+            ),
+            child: child!,
+          );
+        },
       ),
       loading: () => const MaterialApp(
         home: Scaffold(

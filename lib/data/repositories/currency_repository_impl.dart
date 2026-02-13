@@ -25,6 +25,65 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     required this.localDataSource,
     required this.networkInfo,
   });
+  @override
+  Future<Either<Failure, void>> addAlert(Alert alert) async {
+    try {
+      final alertModel = AlertModel.fromEntity(alert);
+      await localDataSource.saveAlert(alertModel);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveAlert(Alert alert) async {
+    try {
+      final alertModel = AlertModel.fromEntity(alert);
+      await localDataSource.saveAlert(alertModel);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveExchangeRates(CurrencyRate rates) async {
+    try {
+      final model = CurrencyRateModel.fromEntity(rates);
+      await localDataSource.cacheRates(model);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ConversionHistory>>> getConversionHistory(
+      {int? limit}) async {
+    try {
+      final history = await localDataSource.getConversionHistory();
+      if (limit != null && history.length > limit) {
+        return Right(history.take(limit).toList());
+      }
+      return Right(history);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Snapshot>>> getSnapshots({int? limit}) async {
+    try {
+      final snapshots = await localDataSource.getSnapshots();
+      if (limit != null && snapshots.length > limit) {
+        return Right(snapshots.take(limit).toList());
+      }
+      return Right(snapshots);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 
   @override
   Future<Either<Failure, CurrencyRate>> getExchangeRates(
@@ -33,16 +92,16 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     try {
       // Check if we need to update
       final lastUpdate = await localDataSource.getLastUpdateTimestamp();
-      
+
       if (!AppDateUtils.shouldUpdate(lastUpdate)) {
         // Use cached data
         final cached = await localDataSource.getCachedRates();
         return Right(cached);
       }
-      
+
       // Check network
       final isConnected = await networkInfo.isConnected;
-      
+
       if (!isConnected) {
         // Return cached data if available
         try {
@@ -52,7 +111,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
           return const Left(NetworkFailure('No internet and no cached data'));
         }
       }
-      
+
       // Fetch API key
       String apiKey;
       try {
@@ -66,19 +125,18 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
           return Left(AuthFailure('Failed to get API key: $e'));
         }
       }
-      
+
       // Fetch fresh data
       final rates = await remoteDataSource.getExchangeRates(
         baseCurrency,
-        apiKey,
       );
-      
+
       // Cache the data
       await localDataSource.cacheRates(rates);
       await localDataSource.setLastUpdateTimestamp(
         AppDateUtils.getCurrentTimestamp(),
       );
-      
+
       // Save snapshot
       final snapshot = SnapshotModel(
         date: AppDateUtils.getDateOnly(AppDateUtils.now()),
@@ -86,7 +144,7 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         rates: rates.rates,
       );
       await localDataSource.saveSnapshot(snapshot);
-      
+
       return Right(rates);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -111,7 +169,6 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     }
   }
 
-  @override
   Future<Either<Failure, void>> cacheRates(CurrencyRate rates) async {
     try {
       final model = CurrencyRateModel.fromEntity(rates);
@@ -134,25 +191,16 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
         return Right(apiKey);
       } on AuthException catch (e) {
         return Left(AuthFailure(e.message));
+      } catch (e) {
+        return Left(AuthFailure(e.toString()));
       }
     }
   }
 
-  @override
   Future<Either<Failure, void>> cacheApiKey(String apiKey) async {
     try {
       await localDataSource.cacheApiKey(apiKey);
       return const Right(null);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<ConversionHistory>>> getConversionHistory() async {
-    try {
-      final history = await localDataSource.getConversionHistory();
-      return Right(history);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     }
@@ -182,16 +230,6 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
   }
 
   @override
-  Future<Either<Failure, List<Snapshot>>> getSnapshots() async {
-    try {
-      final snapshots = await localDataSource.getSnapshots();
-      return Right(snapshots);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    }
-  }
-
-  @override
   Future<Either<Failure, void>> saveSnapshot(Snapshot snapshot) async {
     try {
       final model = SnapshotModel.fromEntity(snapshot);
@@ -209,26 +247,28 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
   ) async {
     try {
       final snapshots = await localDataSource.getSnapshots();
-      
+
       // Sort by date descending
       snapshots.sort((a, b) => b.date.compareTo(a.date));
-      
+
       // Get requested days
-      final dateRange = AppDateUtils.getDayRange(days);
+      final end = AppDateUtils.now();
+      final start = end.subtract(Duration(days: days - 1));
+      final dateRange = AppDateUtils.getDayRange(start, end);
       final Map<String, double> historicalData = {};
-      
+
       for (final date in dateRange) {
         final snapshot = snapshots.firstWhere(
           (s) => AppDateUtils.getDateOnly(s.date) == date,
           orElse: () => snapshots.first,
         );
-        
+
         final rate = snapshot.getRate(currency);
         if (rate != null) {
           historicalData[AppDateUtils.formatDate(date)] = rate;
         }
       }
-      
+
       return Right(historicalData);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
@@ -240,17 +280,6 @@ class CurrencyRepositoryImpl implements CurrencyRepository {
     try {
       final alerts = await localDataSource.getAlerts();
       return Right(alerts);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> saveAlert(Alert alert) async {
-    try {
-      final model = AlertModel.fromEntity(alert);
-      await localDataSource.saveAlert(model);
-      return const Right(null);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     }

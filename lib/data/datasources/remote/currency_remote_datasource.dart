@@ -8,6 +8,9 @@ import '../../models/currency_rate_model.dart';
 abstract class CurrencyRemoteDataSource {
   Future<CurrencyRateModel> getExchangeRates(String baseCurrency);
   Future<String> getApiKey();
+   Future<String> fetchApiKey();
+  // Or if from Supabase:
+  Future<String> fetchApiKeyFromSupabase();
 }
 
 class CurrencyRemoteDataSourceImpl implements CurrencyRemoteDataSource {
@@ -18,7 +21,17 @@ class CurrencyRemoteDataSourceImpl implements CurrencyRemoteDataSource {
     required this.client,
     required this.supabaseClient,
   });
-
+ @override
+  Future<String> fetchApiKey() async {
+    // Your implementation
+    throw UnimplementedError();
+  }
+  
+  @override
+  Future<String> fetchApiKeyFromSupabase() async {
+    // Your Supabase implementation
+    throw UnimplementedError();
+  }
   @override
   Future<String> getApiKey() async {
     try {

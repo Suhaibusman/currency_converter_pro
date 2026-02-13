@@ -12,7 +12,7 @@ final manageAlertsProvider = Provider((ref) {
 final alertsProvider = FutureProvider<List<Alert>>((ref) async {
   final useCase = ref.watch(manageAlertsProvider);
   final result = await useCase.getAlerts();
-  
+
   return result.fold(
     (failure) => throw Exception(failure.message),
     (alerts) => alerts,
@@ -48,7 +48,7 @@ class AlertActions {
   }
 
   Future<void> toggleAlert(Alert alert) async {
-    final updated = alert.copyWith(isEnabled: !alert.isEnabled);
+    final updated = alert.copyWith(isActive: !alert.isActive);
     await updateAlert(updated);
   }
 }

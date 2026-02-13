@@ -13,8 +13,22 @@ class HeatmapScreen extends ConsumerStatefulWidget {
 
 class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   final List<String> _displayCurrencies = [
-    'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY',
-    'HKD', 'NZD', 'SEK', 'KRW', 'SGD', 'NOK', 'MXN', 'INR',
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'AUD',
+    'CAD',
+    'CHF',
+    'CNY',
+    'HKD',
+    'NZD',
+    'SEK',
+    'KRW',
+    'SGD',
+    'NOK',
+    'MXN',
+    'INR',
   ];
 
   @override
@@ -37,7 +51,8 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildLegendItem(context, Colors.green, 'Strong gain'),
-                      _buildLegendItem(context, Colors.lightGreen, 'Moderate gain'),
+                      _buildLegendItem(
+                          context, Colors.lightGreen, 'Moderate gain'),
                       _buildLegendItem(context, Colors.grey, 'Neutral'),
                       _buildLegendItem(context, Colors.orange, 'Moderate loss'),
                       _buildLegendItem(context, Colors.red, 'Strong loss'),
@@ -77,7 +92,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
               );
             },
             loading: () => const LoadingWidget(message: 'Loading heatmap...'),
-            error: (error, stack) => ErrorWidget(
+            error: (error, stack) => CustomErrorWidget(
               message: error.toString(),
               onRetry: () {
                 ref.invalidate(historicalSnapshotsProvider);
@@ -86,7 +101,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
           );
         },
         loading: () => const LoadingWidget(message: 'Loading rates...'),
-        error: (error, stack) => ErrorWidget(
+        error: (error, stack) => CustomErrorWidget(
           message: error.toString(),
           onRetry: () {
             ref.invalidate(currencyRatesProvider);
@@ -99,7 +114,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
   Widget _buildHeatmap(Map<String, double> currentRates, List snapshots) {
     // Calculate 24h changes
     final yesterday = snapshots.isNotEmpty ? snapshots.last : null;
-    
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -126,11 +141,12 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
             itemBuilder: (context, index) {
               final currency = _displayCurrencies[index];
               final currentRate = currentRates[currency] ?? 1.0;
-              
+
               double changePercent = 0.0;
               if (yesterday != null) {
                 final previousRate = yesterday.getRate(currency) ?? currentRate;
-                changePercent = ((currentRate - previousRate) / previousRate) * 100;
+                changePercent =
+                    ((currentRate - previousRate) / previousRate) * 100;
               }
 
               return _buildHeatmapCell(currency, changePercent);
@@ -186,7 +202,8 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
     );
   }
 
-  Widget _buildCurrencyRanking(Map<String, double> currentRates, List snapshots) {
+  Widget _buildCurrencyRanking(
+      Map<String, double> currentRates, List snapshots) {
     if (snapshots.isEmpty) return const SizedBox.shrink();
 
     final yesterday = snapshots.last;

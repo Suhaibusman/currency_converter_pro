@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static ThemeData getTheme(String themeName, {Color? customColor, double fontSize = 16.0}) {
+  static ThemeData getTheme(String themeName,
+      {Color? customColor, double fontSize = 16.0}) {
     switch (themeName) {
       case 'neon_pulse':
         return _neonPulse(fontSize);
@@ -55,19 +56,22 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.poppinsTextTheme()
+          .apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF00FFF0),
           foregroundColor: const Color(0xFF000000),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -114,19 +118,22 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      textTheme: GoogleFonts.interTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.interTextTheme()
+          .apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6C63FF),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -174,19 +181,22 @@ class AppTheme {
         centerTitle: true,
         foregroundColor: Color(0xFF000000),
       ),
-      textTheme: GoogleFonts.montserratTextTheme().apply(
-        bodyColor: Colors.black,
-        displayColor: Colors.black,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.montserratTextTheme()
+          .apply(
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF4FC3F7),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -234,19 +244,22 @@ class AppTheme {
         centerTitle: true,
         foregroundColor: Color(0xFF000000),
       ),
-      textTheme: GoogleFonts.latoTextTheme().apply(
-        bodyColor: Colors.black,
-        displayColor: Colors.black,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.latoTextTheme()
+          .apply(
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFB74D),
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -277,19 +290,22 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      textTheme: GoogleFonts.robotoTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.robotoTextTheme()
+          .apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF00C853),
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -321,19 +337,22 @@ class AppTheme {
         centerTitle: true,
         foregroundColor: Color(0xFF000000),
       ),
-      textTheme: GoogleFonts.nunitoTextTheme().apply(
-        bodyColor: Colors.black,
-        displayColor: Colors.black,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.nunitoTextTheme()
+          .apply(
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFFD700),
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -364,19 +383,22 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      textTheme: GoogleFonts.ralewayTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.ralewayTextTheme()
+          .apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF29B6F6),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -407,19 +429,22 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      textTheme: GoogleFonts.openSansTextTheme().apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.openSansTextTheme()
+          .apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFF5722),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -451,19 +476,22 @@ class AppTheme {
         centerTitle: true,
         foregroundColor: Color(0xFF000000),
       ),
-      textTheme: GoogleFonts.sourceSansProTextTheme().apply(
-        bodyColor: Colors.black,
-        displayColor: Colors.black,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.sourceCodeProTextTheme()
+          .apply(
+            bodyColor: Colors.black,
+            displayColor: Colors.black,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2196F3),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -471,8 +499,9 @@ class AppTheme {
   }
 
   static ThemeData _systemSync(double fontSize) {
-    final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    
+    final brightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+
     if (brightness == Brightness.dark) {
       return _midnightLuxe(fontSize);
     } else {
@@ -482,12 +511,13 @@ class AppTheme {
 
   static ThemeData _customTheme(Color primaryColor, double fontSize) {
     final isDark = primaryColor.computeLuminance() < 0.5;
-    
+
     return ThemeData(
       useMaterial3: true,
       brightness: isDark ? Brightness.dark : Brightness.light,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
+      scaffoldBackgroundColor:
+          isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
       colorScheme: isDark
           ? ColorScheme.dark(
               primary: primaryColor,
@@ -505,24 +535,28 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
+        backgroundColor:
+            isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5),
         elevation: 0,
         centerTitle: true,
         foregroundColor: isDark ? Colors.white : Colors.black,
       ),
-      textTheme: GoogleFonts.poppinsTextTheme().apply(
-        bodyColor: isDark ? Colors.white : Colors.black,
-        displayColor: isDark ? Colors.white : Colors.black,
-      ).copyWith(
-        bodyLarge: TextStyle(fontSize: fontSize),
-        bodyMedium: TextStyle(fontSize: fontSize - 2),
-        bodySmall: TextStyle(fontSize: fontSize - 4),
-      ),
+      textTheme: GoogleFonts.poppinsTextTheme()
+          .apply(
+            bodyColor: isDark ? Colors.white : Colors.black,
+            displayColor: isDark ? Colors.white : Colors.black,
+          )
+          .copyWith(
+            bodyLarge: TextStyle(fontSize: fontSize),
+            bodyMedium: TextStyle(fontSize: fontSize - 2),
+            bodySmall: TextStyle(fontSize: fontSize - 4),
+          ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: isDark ? Colors.white : Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
@@ -531,17 +565,89 @@ class AppTheme {
 
   static List<Map<String, dynamic>> getAllThemes() {
     return [
-      {'name': 'neon_pulse', 'display': 'Neon Pulse', 'icon': Icons.flash_on, 'color': const Color(0xFF00FFF0)},
-      {'name': 'midnight_luxe', 'display': 'Midnight Luxe', 'icon': Icons.nightlight_round, 'color': const Color(0xFF6C63FF)},
-      {'name': 'frost_aura', 'display': 'Frost Aura', 'icon': Icons.ac_unit, 'color': const Color(0xFF4FC3F7)},
-      {'name': 'sahara_glow', 'display': 'Sahara Glow', 'icon': Icons.wb_sunny, 'color': const Color(0xFFFFB74D)},
-      {'name': 'emerald_wave', 'display': 'Emerald Wave', 'icon': Icons.waves, 'color': const Color(0xFF00C853)},
-      {'name': 'golden_horizon', 'display': 'Golden Horizon', 'icon': Icons.wb_twilight, 'color': const Color(0xFFFFD700)},
-      {'name': 'ocean_prism', 'display': 'Ocean Prism', 'icon': Icons.water, 'color': const Color(0xFF0277BD)},
-      {'name': 'sunset_ember', 'display': 'Sunset Ember', 'icon': Icons.local_fire_department, 'color': const Color(0xFFFF5722)},
-      {'name': 'sky_nova', 'display': 'Sky Nova', 'icon': Icons.cloud, 'color': const Color(0xFF2196F3)},
-      {'name': 'system_sync', 'display': 'System Sync', 'icon': Icons.brightness_auto, 'color': Colors.grey},
-      {'name': 'custom', 'display': 'Custom', 'icon': Icons.palette, 'color': Colors.purple},
+      {
+        'name': 'neon_pulse',
+        'display': 'Neon Pulse',
+        'icon': Icons.flash_on,
+        'color': const Color(0xFF00FFF0)
+      },
+      {
+        'name': 'midnight_luxe',
+        'display': 'Midnight Luxe',
+        'icon': Icons.nightlight_round,
+        'color': const Color(0xFF6C63FF)
+      },
+      {
+        'name': 'frost_aura',
+        'display': 'Frost Aura',
+        'icon': Icons.ac_unit,
+        'color': const Color(0xFF4FC3F7)
+      },
+      {
+        'name': 'sahara_glow',
+        'display': 'Sahara Glow',
+        'icon': Icons.wb_sunny,
+        'color': const Color(0xFFFFB74D)
+      },
+      {
+        'name': 'emerald_wave',
+        'display': 'Emerald Wave',
+        'icon': Icons.waves,
+        'color': const Color(0xFF00C853)
+      },
+      {
+        'name': 'golden_horizon',
+        'display': 'Golden Horizon',
+        'icon': Icons.wb_twilight,
+        'color': const Color(0xFFFFD700)
+      },
+      {
+        'name': 'ocean_prism',
+        'display': 'Ocean Prism',
+        'icon': Icons.water,
+        'color': const Color(0xFF0277BD)
+      },
+      {
+        'name': 'sunset_ember',
+        'display': 'Sunset Ember',
+        'icon': Icons.local_fire_department,
+        'color': const Color(0xFFFF5722)
+      },
+      {
+        'name': 'sky_nova',
+        'display': 'Sky Nova',
+        'icon': Icons.cloud,
+        'color': const Color(0xFF2196F3)
+      },
+      {
+        'name': 'system_sync',
+        'display': 'System Sync',
+        'icon': Icons.brightness_auto,
+        'color': Colors.grey
+      },
+      {
+        'name': 'custom',
+        'display': 'Custom',
+        'icon': Icons.palette,
+        'color': Colors.purple
+      },
     ];
+  }
+
+  static BoxDecoration glassmorphism(BuildContext context) {
+    return BoxDecoration(
+      color: Theme.of(context).cardColor.withValues(alpha: 0.7),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.1),
+          blurRadius: 10,
+          spreadRadius: 2,
+        ),
+      ],
+    );
   }
 }

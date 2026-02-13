@@ -17,7 +17,8 @@ class AlertModel extends Alert {
       id: json['id'] as String,
       baseCurrency: json['baseCurrency'] as String,
       targetCurrency: json['targetCurrency'] as String,
-      type: json['type'] as String,
+      type: AlertType.values
+          .firstWhere((e) => e.name == (json['type'] as String)),
       targetRate: (json['targetRate'] as num).toDouble(),
       isActive: json['isActive'] as bool,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -33,7 +34,7 @@ class AlertModel extends Alert {
       'id': id,
       'baseCurrency': baseCurrency,
       'targetCurrency': targetCurrency,
-      'type': type,
+      'type': type.name,
       'targetRate': targetRate,
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),

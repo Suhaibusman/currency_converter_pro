@@ -5,8 +5,8 @@ class AppConstants {
   static const String appDescription = 'Live Rates - Offline First Currency Converter';
   
   // Supabase Configuration
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  static const String supabaseUrl = 'https://lvgradexeijxuoolcwfw.supabase.co';
+  static const String supabaseAnonKey = 'sb_publishable_kIOIPKbdroAmuNs9A7RwNQ_1z-7tiYw';
   static const String apiKeyTable = 'api_keys';
   static const String apiKeyColumn = 'exchange_rate_api_key';
   
@@ -27,7 +27,57 @@ class AppConstants {
   static const String roundingModeKey = 'rounding_mode';
   static const String biometricEnabledKey = 'biometric_enabled';
   static const String languageKey = 'language';
+  // Storage Keys
+  static const String apiKeyStorageKey = 'api_key';
+  static const String conversionHistoryKey = 'conversion_history';
+  static const String snapshotsKey = 'snapshots';
+  static const String alertsKey = 'alerts';
+  static const String favoritePairsKey = 'favorite_pairs';
+  static const String recentSearchesKey = 'recent_searches';
   
+  // Limits
+  static const int maxHistoryItems = 50;
+  
+  // Currency Data
+  static const Map<String, String> currencySymbols = {
+    'USD': '\$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'AUD': 'A\$',
+    'CAD': 'C\$',
+    'CHF': 'Fr',
+    'CNY': '¥',
+    'INR': '₹',
+    'PKR': 'Rs',
+    // Add more currencies as needed
+  };
+  
+  static const Map<String, String> currencyNames = {
+    'USD': 'US Dollar',
+    'EUR': 'Euro',
+    'GBP': 'British Pound',
+    'JPY': 'Japanese Yen',
+    'AUD': 'Australian Dollar',
+    'CAD': 'Canadian Dollar',
+    'CHF': 'Swiss Franc',
+    'CNY': 'Chinese Yuan',
+    'INR': 'Indian Rupee',
+    'PKR': 'Pakistani Rupee',
+    // Add more currencies as needed
+  };
+  
+  static const List<String> popularCurrencies = [
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'AUD',
+    'CAD',
+    'CHF',
+    'CNY',
+    'INR',
+  ];
   // Cache Keys
   static const String cacheKeyRates = 'cached_rates';
   static const String cacheKeyTimestamp = 'last_update_timestamp';

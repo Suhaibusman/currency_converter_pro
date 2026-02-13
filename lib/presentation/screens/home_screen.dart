@@ -20,7 +20,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final TextEditingController _amountController = TextEditingController(text: '1');
+  final TextEditingController _amountController =
+      TextEditingController(text: '1');
   int _currentIndex = 0;
 
   @override
@@ -48,9 +49,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showCurrencySelector(BuildContext context, bool isBase) async {
     final recentSearches = await ref.read(recentSearchesProvider.future);
-    
+
     if (!context.mounted) return;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -61,7 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             : ref.read(selectedCurrenciesProvider).first,
         onCurrencySelected: (currency) {
           if (isBase) {
-            ref.read(baseCurrencyProvider.notifier).state = currency;
+            ref.read(baseCurrencyProvider.notifier).setBaseCurrency(currency);
           }
           ref.read(currencyRepositoryProvider).addRecentSearch(currency);
         },
@@ -184,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           ),
-          
+
           // Amount Input
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -255,7 +256,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       decimalPrecision: decimalPrecision,
                       onTap: () {
                         // Switch to this currency as base
-                        ref.read(baseCurrencyProvider.notifier).state = currency;
+                        ref
+                            .read(baseCurrencyProvider.notifier)
+                            .setBaseCurrency(currency);
                       },
                     );
                   },
@@ -264,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               loading: () => const LoadingWidget(
                 message: 'Loading exchange rates...',
               ),
-              error: (error, stack) => ErrorWidget(
+              error: (error, stack) => CustomErrorWidget(
                 message: error.toString(),
                 onRetry: _refreshRates,
               ),
