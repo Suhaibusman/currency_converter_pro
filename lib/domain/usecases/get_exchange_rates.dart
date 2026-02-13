@@ -11,8 +11,4 @@ class GetExchangeRates {
   Future<Either<Failure, CurrencyRate>> call(String baseCurrency) async {
     return await repository.getExchangeRates(baseCurrency);
   }
-  
-  Future<Either<Failure, CurrencyRate>> getCached() async {
-    return await repository.getCachedRates();
-  }
 }

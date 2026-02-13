@@ -1,3 +1,4 @@
+import 'package:currency_converter_pro/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/theme_constants.dart';
@@ -6,6 +7,29 @@ import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'currency_provider.dart';
 
+
+final currentThemeProvider = FutureProvider<ThemeData>((ref) async {
+  final settingsRepo = ref.watch(settingsRepositoryProvider);
+  
+  final themeResult = await settingsRepo.getTheme();
+  final colorResult = await settingsRepo.getCustomColor();
+  final fontSizeResult = await settingsRepo.getFontSize();
+  
+  return themeResult.fold(
+    (failure) => AppTheme.getTheme('midnight_luxe'),
+    (themeName) => colorResult.fold(
+      (failure) => AppTheme.getTheme(themeName),
+      (customColor) => fontSizeResult.fold(
+        (failure) => AppTheme.getTheme(themeName, customColor: Color(customColor)),
+        (fontSize) => AppTheme.getTheme(
+          themeName,
+          customColor: Color(customColor),
+          fontSize: fontSize,
+        ),
+      ),
+    ),
+  );
+});
 // Settings Repository Provider
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return SettingsRepositoryImpl(

@@ -5,8 +5,8 @@ class ConversionHistoryModel extends ConversionHistory {
     required super.id,
     required super.fromCurrency,
     required super.toCurrency,
-    required super.amount,
-    required super.result,
+    required super.fromAmount,
+    required super.toAmount,
     required super.rate,
     required super.timestamp,
   });
@@ -14,34 +14,35 @@ class ConversionHistoryModel extends ConversionHistory {
   factory ConversionHistoryModel.fromJson(Map<String, dynamic> json) {
     return ConversionHistoryModel(
       id: json['id'] as String,
-      fromCurrency: json['from_currency'] as String,
-      toCurrency: json['to_currency'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      result: (json['result'] as num).toDouble(),
+      fromCurrency: json['fromCurrency'] as String,
+      toCurrency: json['toCurrency'] as String,
+      fromAmount: (json['fromAmount'] as num).toDouble(),
+      toAmount: (json['toAmount'] as num).toDouble(),
       rate: (json['rate'] as num).toDouble(),
       timestamp: DateTime.parse(json['timestamp'] as String),
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'from_currency': fromCurrency,
-      'to_currency': toCurrency,
-      'amount': amount,
-      'result': result,
+      'fromCurrency': fromCurrency,
+      'toCurrency': toCurrency,
+      'fromAmount': fromAmount,
+      'toAmount': toAmount,
       'rate': rate,
       'timestamp': timestamp.toIso8601String(),
     };
   }
-  
+
   factory ConversionHistoryModel.fromEntity(ConversionHistory entity) {
     return ConversionHistoryModel(
       id: entity.id,
       fromCurrency: entity.fromCurrency,
       toCurrency: entity.toCurrency,
-      amount: entity.amount,
-      result: entity.result,
+      fromAmount: entity.fromAmount,
+      toAmount: entity.toAmount,
       rate: entity.rate,
       timestamp: entity.timestamp,
     );

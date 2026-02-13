@@ -3,56 +3,54 @@ import '../../domain/entities/alert.dart';
 class AlertModel extends Alert {
   const AlertModel({
     required super.id,
-    required super.fromCurrency,
-    required super.toCurrency,
+    required super.baseCurrency,
+    required super.targetCurrency,
     required super.type,
-    required super.threshold,
-    required super.isEnabled,
+    required super.targetRate,
+    required super.isActive,
     required super.createdAt,
-    super.lastTriggered,
+    super.triggeredAt,
   });
 
   factory AlertModel.fromJson(Map<String, dynamic> json) {
     return AlertModel(
       id: json['id'] as String,
-      fromCurrency: json['from_currency'] as String,
-      toCurrency: json['to_currency'] as String,
-      type: AlertType.values.firstWhere(
-        (e) => e.name == json['type'],
-        orElse: () => AlertType.above,
-      ),
-      threshold: (json['threshold'] as num).toDouble(),
-      isEnabled: json['is_enabled'] as bool? ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      lastTriggered: json['last_triggered'] != null
-          ? DateTime.parse(json['last_triggered'] as String)
+      baseCurrency: json['baseCurrency'] as String,
+      targetCurrency: json['targetCurrency'] as String,
+      type: json['type'] as String,
+      targetRate: (json['targetRate'] as num).toDouble(),
+      isActive: json['isActive'] as bool,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      triggeredAt: json['triggeredAt'] != null
+          ? DateTime.parse(json['triggeredAt'] as String)
           : null,
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'from_currency': fromCurrency,
-      'to_currency': toCurrency,
-      'type': type.name,
-      'threshold': threshold,
-      'is_enabled': isEnabled,
-      'created_at': createdAt.toIso8601String(),
-      'last_triggered': lastTriggered?.toIso8601String(),
+      'baseCurrency': baseCurrency,
+      'targetCurrency': targetCurrency,
+      'type': type,
+      'targetRate': targetRate,
+      'isActive': isActive,
+      'createdAt': createdAt.toIso8601String(),
+      'triggeredAt': triggeredAt?.toIso8601String(),
     };
   }
-  
+
   factory AlertModel.fromEntity(Alert entity) {
     return AlertModel(
       id: entity.id,
-      fromCurrency: entity.fromCurrency,
-      toCurrency: entity.toCurrency,
+      baseCurrency: entity.baseCurrency,
+      targetCurrency: entity.targetCurrency,
       type: entity.type,
-      threshold: entity.threshold,
-      isEnabled: entity.isEnabled,
+      targetRate: entity.targetRate,
+      isActive: entity.isActive,
       createdAt: entity.createdAt,
-      lastTriggered: entity.lastTriggered,
+      triggeredAt: entity.triggeredAt,
     );
   }
 }

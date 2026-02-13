@@ -8,89 +8,52 @@ class GetHistoricalData {
 
   GetHistoricalData(this.repository);
 
-  Future<Either<Failure, List<Snapshot>>> getSnapshots() async {
-    return await repository.getSnapshots();
+  Future<Either<Failure, List<Snapshot>>> call({int? days}) async {
+    return await repository.getSnapshots(limit: days);
   }
-  
-  Future<Either<Failure, Map<String, double>>> getData(
-    String currency,
-    int days,
-  ) async {
-    return await repository.getHistoricalData(currency, days);
-  }
-  
-  Future<Either<Failure, void>> saveSnapshot(Snapshot snapshot) async {
-    return await repository.saveSnapshot(snapshot);
-  }
-  
-  HistoricalAnalysis analyze(List<Snapshot> snapshots, String currency) {
+
+  Future<Either<Failure, Map<String, dynamic>>> getStatistics({
+    required String currency,
+    required List<Snapshot> snapshots,
+  }) async {
     if (snapshots.isEmpty) {
-      return HistoricalAnalysis.empty();
+      return const Left(DataNotFoundFailure('No historical data available'));
     }
-    
+
     final rates = snapshots
         .map((s) => s.getRate(currency))
         .where((r) => r != null)
-        .cast<double>()
+        .map((r) => r!)
         .toList();
-    
+
     if (rates.isEmpty) {
-      return HistoricalAnalysis.empty();
+      return const Left(DataNotFoundFailure('No data for currency'));
     }
-    
+
     final high = rates.reduce((a, b) => a > b ? a : b);
     final low = rates.reduce((a, b) => a < b ? a : b);
-    final average = rates.reduce((a, b) => a + b) / rates.length;
+    final avg = rates.reduce((a, b) => a + b) / rates.length;
     final current = rates.last;
-    final previous = rates.first;
-    final change = ((current - previous) / previous) * 100;
+    final change = ((current - rates.first) / rates.first) * 100;
+
+    return Right({
+      'high': high,
+      'low': low,
+      'average': avg,
+      'current': current,
+      'change': change,
+      'volatility': _calculateVolatility(rates),
+    });
+  }
+
+  double _calculateVolatility(List<double> rates) {
+    if (rates.length < 2) return 0.0;
     
-    // Calculate volatility
+    final avg = rates.reduce((a, b) => a + b) / rates.length;
     final variance = rates
-        .map((r) => (r - average) * (r - average))
+        .map((r) => (r - avg) * (r - avg))
         .reduce((a, b) => a + b) / rates.length;
-    final volatility = variance > 0 ? (variance.abs() / average) * 100 : 0.0;
     
-    return HistoricalAnalysis(
-      high: high,
-      low: low,
-      average: average,
-      current: current,
-      change: change,
-      volatility: volatility,
-    );
+    return variance;
   }
-}
-
-class HistoricalAnalysis {
-  final double high;
-  final double low;
-  final double average;
-  final double current;
-  final double change;
-  final double volatility;
-
-  HistoricalAnalysis({
-    required this.high,
-    required this.low,
-    required this.average,
-    required this.current,
-    required this.change,
-    required this.volatility,
-  });
-  
-  factory HistoricalAnalysis.empty() {
-    return HistoricalAnalysis(
-      high: 0,
-      low: 0,
-      average: 0,
-      current: 0,
-      change: 0,
-      volatility: 0,
-    );
-  }
-  
-  bool get isHighVolatility => volatility > 2.0;
-  bool get isIncreasing => change > 0;
-  bool get isDecreasing => change < 0;
 }

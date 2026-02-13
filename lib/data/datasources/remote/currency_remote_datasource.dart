@@ -6,8 +6,8 @@ import '../../../core/error/exceptions.dart';
 import '../../models/currency_rate_model.dart';
 
 abstract class CurrencyRemoteDataSource {
-  Future<CurrencyRateModel> getExchangeRates(String baseCurrency, String apiKey);
-  Future<String> fetchApiKeyFromSupabase();
+  Future<CurrencyRateModel> getExchangeRates(String baseCurrency);
+  Future<String> getApiKey();
 }
 
 class CurrencyRemoteDataSourceImpl implements CurrencyRemoteDataSource {
@@ -20,51 +20,61 @@ class CurrencyRemoteDataSourceImpl implements CurrencyRemoteDataSource {
   });
 
   @override
-  Future<CurrencyRateModel> getExchangeRates(
-    String baseCurrency,
-    String apiKey,
-  ) async {
+  Future<String> getApiKey() async {
     try {
-      final url = Uri.parse(
-        '${AppConstants.apiBaseUrl}/$apiKey/latest/$baseCurrency',
-      );
-      
-      final response = await client.get(url);
-      
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        
-        if (json['result'] == 'success') {
-          return CurrencyRateModel.fromJson(json);
-        } else {
-          throw ServerException('API returned error: ${json['error-type']}');
-        }
-      } else {
-        throw ServerException(
-          'Failed to fetch rates. Status: ${response.statusCode}',
-        );
+      final response = await supabaseClient
+          .from(AppConstants.apiKeyTable)
+          .select(AppConstants.apiKeyColumn)
+          .limit(1)
+          .single();
+
+      if (response[AppConstants.apiKeyColumn] != null) {
+        return response[AppConstants.apiKeyColumn] as String;
       }
+      
+      throw const ServerException('API key not found in database');
     } catch (e) {
-      if (e is ServerException) rethrow;
-      throw ServerException('Network error: $e');
+      throw ServerException('Failed to fetch API key: $e');
     }
   }
 
   @override
-  Future<String> fetchApiKeyFromSupabase() async {
+  Future<CurrencyRateModel> getExchangeRates(String baseCurrency) async {
     try {
-      final response = await supabaseClient
-          .from(AppConstants.apiKeyTable)
-          .select('api_key')
-          .single();
+      final apiKey = await getApiKey();
       
-      if (response['api_key'] != null) {
-        return response['api_key'] as String;
+      final url = Uri.parse(
+        '${AppConstants.exchangeRateApiBaseUrl}/$apiKey${AppConstants.exchangeRateApiEndpoint}/$baseCurrency',
+      );
+
+      final response = await client.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body) as Map<String, dynamic>;
+        
+        if (jsonData['result'] == 'success') {
+          return CurrencyRateModel.fromJson(jsonData);
+        } else {
+          throw ServerException(
+            jsonData['error-type'] ?? 'Unknown error from API',
+          );
+        }
+      } else if (response.statusCode == 401) {
+        throw const InvalidApiKeyException();
       } else {
-        throw AuthException('API key not found in database');
+        throw ApiException(
+          'Failed to fetch exchange rates',
+          response.statusCode,
+        );
       }
+    } on ServerException {
+      rethrow;
+    } on InvalidApiKeyException {
+      rethrow;
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      throw AuthException('Failed to fetch API key: $e');
+      throw NetworkException('Network error: $e');
     }
   }
 }

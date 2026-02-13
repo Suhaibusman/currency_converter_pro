@@ -1,74 +1,98 @@
 import 'package:equatable/equatable.dart';
 
-enum AlertType {
-  above,
-  below,
-  percentageChange,
-}
-
 class Alert extends Equatable {
   final String id;
-  final String fromCurrency;
-  final String toCurrency;
-  final AlertType type;
-  final double threshold;
-  final bool isEnabled;
+  final String baseCurrency;
+  final String targetCurrency;
+  final String type; // 'above', 'below', 'percentage_change'
+  final double targetRate;
+  final bool isActive;
   final DateTime createdAt;
-  final DateTime? lastTriggered;
+  final DateTime? triggeredAt;
 
   const Alert({
     required this.id,
-    required this.fromCurrency,
-    required this.toCurrency,
+    required this.baseCurrency,
+    required this.targetCurrency,
     required this.type,
-    required this.threshold,
-    required this.isEnabled,
+    required this.targetRate,
+    required this.isActive,
     required this.createdAt,
-    this.lastTriggered,
+    this.triggeredAt,
   });
 
   @override
   List<Object?> get props => [
         id,
-        fromCurrency,
-        toCurrency,
+        baseCurrency,
+        targetCurrency,
         type,
-        threshold,
-        isEnabled,
+        targetRate,
+        isActive,
         createdAt,
-        lastTriggered,
+        triggeredAt,
       ];
 
   Alert copyWith({
     String? id,
-    String? fromCurrency,
-    String? toCurrency,
-    AlertType? type,
-    double? threshold,
-    bool? isEnabled,
+    String? baseCurrency,
+    String? targetCurrency,
+    String? type,
+    double? targetRate,
+    bool? isActive,
     DateTime? createdAt,
-    DateTime? lastTriggered,
+    DateTime? triggeredAt,
   }) {
     return Alert(
       id: id ?? this.id,
-      fromCurrency: fromCurrency ?? this.fromCurrency,
-      toCurrency: toCurrency ?? this.toCurrency,
+      baseCurrency: baseCurrency ?? this.baseCurrency,
+      targetCurrency: targetCurrency ?? this.targetCurrency,
       type: type ?? this.type,
-      threshold: threshold ?? this.threshold,
-      isEnabled: isEnabled ?? this.isEnabled,
+      targetRate: targetRate ?? this.targetRate,
+      isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
-      lastTriggered: lastTriggered ?? this.lastTriggered,
+      triggeredAt: triggeredAt ?? this.triggeredAt,
     );
   }
-  
-  String get description {
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'baseCurrency': baseCurrency,
+      'targetCurrency': targetCurrency,
+      'type': type,
+      'targetRate': targetRate,
+      'isActive': isActive,
+      'createdAt': createdAt.toIso8601String(),
+      'triggeredAt': triggeredAt?.toIso8601String(),
+    };
+  }
+
+  factory Alert.fromJson(Map<String, dynamic> json) {
+    return Alert(
+      id: json['id'] as String,
+      baseCurrency: json['baseCurrency'] as String,
+      targetCurrency: json['targetCurrency'] as String,
+      type: json['type'] as String,
+      targetRate: (json['targetRate'] as num).toDouble(),
+      isActive: json['isActive'] as bool,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      triggeredAt: json['triggeredAt'] != null
+          ? DateTime.parse(json['triggeredAt'] as String)
+          : null,
+    );
+  }
+
+  String get displayText {
     switch (type) {
-      case AlertType.above:
-        return '$fromCurrency/$toCurrency above ${threshold.toStringAsFixed(4)}';
-      case AlertType.below:
-        return '$fromCurrency/$toCurrency below ${threshold.toStringAsFixed(4)}';
-      case AlertType.percentageChange:
-        return '$fromCurrency/$toCurrency changes by ${threshold.toStringAsFixed(2)}%';
+      case 'above':
+        return '$targetCurrency above $targetRate $baseCurrency';
+      case 'below':
+        return '$targetCurrency below $targetRate $baseCurrency';
+      case 'percentage_change':
+        return '$targetCurrency changes by ${targetRate}%';
+      default:
+        return 'Unknown alert type';
     }
   }
 }

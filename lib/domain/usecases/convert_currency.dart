@@ -1,27 +1,29 @@
-import '../entities/currency_rate.dart';
+import 'package:dartz/dartz.dart';
+import '../../core/error/failures.dart';
+import '../repositories/currency_repository.dart';
 
 class ConvertCurrency {
-  double call({
-    required CurrencyRate rates,
+  final CurrencyRepository repository;
+
+  ConvertCurrency(this.repository);
+
+  Future<Either<Failure, double>> call({
     required String from,
     required String to,
     required double amount,
-  }) {
-    return rates.convert(from, to, amount);
-  }
-  
-  Map<String, double> convertToMultiple({
-    required CurrencyRate rates,
-    required String from,
-    required List<String> toCurrencies,
-    required double amount,
-  }) {
-    final Map<String, double> results = {};
+  }) async {
+    final ratesResult = await repository.getCachedRates();
     
-    for (final to in toCurrencies) {
-      results[to] = rates.convert(from, to, amount);
-    }
-    
-    return results;
+    return ratesResult.fold(
+      (failure) => Left(failure),
+      (rates) {
+        try {
+          final result = rates.convert(from, to, amount);
+          return Right(result);
+        } catch (e) {
+          return const Left(CacheFailure('Conversion failed'));
+        }
+      },
+    );
   }
 }

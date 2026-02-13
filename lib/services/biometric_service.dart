@@ -1,5 +1,4 @@
 import 'package:local_auth/local_auth.dart';
-import 'package:flutter/services.dart';
 
 class BiometricService {
   static final BiometricService _instance = BiometricService._internal();
@@ -10,8 +9,8 @@ class BiometricService {
 
   Future<bool> isAvailable() async {
     try {
-      return await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
-    } on PlatformException {
+      return await _auth.canCheckBiometrics && await _auth.isDeviceSupported();
+    } catch (e) {
       return false;
     }
   }
@@ -19,33 +18,22 @@ class BiometricService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
-    } on PlatformException {
+    } catch (e) {
       return [];
     }
   }
 
-  Future<bool> authenticate({
-    String reason = 'Please authenticate to access the app',
-  }) async {
+  Future<bool> authenticate() async {
     try {
       return await _auth.authenticate(
-        localizedReason: reason,
+        localizedReason: 'Please authenticate to access Currency Converter Pro',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false,
+          biometricOnly: true,
         ),
       );
-    } on PlatformException catch (e) {
-      print('Biometric authentication error: $e');
+    } catch (e) {
       return false;
-    }
-  }
-
-  Future<void> stopAuthentication() async {
-    try {
-      await _auth.stopAuthentication();
-    } on PlatformException {
-      // Ignore
     }
   }
 }

@@ -2,41 +2,33 @@ import '../../domain/entities/snapshot.dart';
 
 class SnapshotModel extends Snapshot {
   const SnapshotModel({
-    required super.date,
     required super.baseCurrency,
     required super.rates,
+    required super.date,
   });
 
   factory SnapshotModel.fromJson(Map<String, dynamic> json) {
-    final rates = <String, double>{};
-    
-    if (json['rates'] != null) {
-      final ratesJson = json['rates'] as Map<String, dynamic>;
-      ratesJson.forEach((key, value) {
-        rates[key] = (value as num).toDouble();
-      });
-    }
-    
     return SnapshotModel(
+      baseCurrency: json['baseCurrency'] as String,
+      rates: Map<String, double>.from(json['rates'] as Map),
       date: DateTime.parse(json['date'] as String),
-      baseCurrency: json['base_currency'] as String,
-      rates: rates,
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
-      'date': date.toIso8601String(),
-      'base_currency': baseCurrency,
+      'baseCurrency': baseCurrency,
       'rates': rates,
+      'date': date.toIso8601String(),
     };
   }
-  
+
   factory SnapshotModel.fromEntity(Snapshot entity) {
     return SnapshotModel(
-      date: entity.date,
       baseCurrency: entity.baseCurrency,
       rates: entity.rates,
+      date: entity.date,
     );
   }
 }

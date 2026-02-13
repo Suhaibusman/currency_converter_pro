@@ -1,13 +1,12 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../core/constants/app_constants.dart';
-import '../domain/entities/alert.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = 
+  final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
@@ -20,9 +19,9 @@ class NotificationService {
     );
 
     await _notifications.initialize(initSettings);
-
+    
     // Create notification channel for Android
-    const androidChannel = AndroidNotificationChannel(
+    const channel = AndroidNotificationChannel(
       AppConstants.notificationChannelId,
       AppConstants.notificationChannelName,
       description: AppConstants.notificationChannelDescription,
@@ -30,12 +29,16 @@ class NotificationService {
     );
 
     await _notifications
-        .resolvePlatformSpecificImplementation
+        .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidChannel);
+        ?.createNotificationChannel(channel);
   }
 
-  Future<void> showAlertNotification(Alert alert, double currentRate) async {
+  Future<void> showAlertNotification({
+    required String title,
+    required String body,
+    int id = 0,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       AppConstants.notificationChannelId,
       AppConstants.notificationChannelName,
@@ -46,48 +49,16 @@ class NotificationService {
 
     const iosDetails = DarwinNotificationDetails();
 
-    const details = NotificationDetails(
+    const notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
 
     await _notifications.show(
-      alert.id.hashCode,
-      'Currency Alert Triggered',
-      '${alert.fromCurrency}/${alert.toCurrency}: ${currentRate.toStringAsFixed(4)} - ${alert.description}',
-      details,
+      id,
+      title,
+      body,
+      notificationDetails,
     );
-  }
-
-  Future<void> showDailyUpdateNotification(String message) async {
-    const androidDetails = AndroidNotificationDetails(
-      AppConstants.notificationChannelId,
-      AppConstants.notificationChannelName,
-      channelDescription: AppConstants.notificationChannelDescription,
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
-    );
-
-    const iosDetails = DarwinNotificationDetails();
-
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await _notifications.show(
-      0,
-      'Currency Rates Updated',
-      message,
-      details,
-    );
-  }
-
-  Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
-  }
-
-  Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
   }
 }

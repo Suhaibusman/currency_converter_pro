@@ -1,13 +1,38 @@
+import 'package:currency_converter_pro/data/datasources/local/settings_local_datasource.dart';
+import 'package:currency_converter_pro/data/repositories/settings_repository_impl.dart';
+import 'package:currency_converter_pro/presentation/providers/currency_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'theme_provider.dart';
 
-// Font Size Provider
-final fontSizeProvider = StateNotifierProvider<FontSizeNotifier, double>(
-  (ref) {
-    return FontSizeNotifier(ref.watch(settingsRepositoryProvider));
-  },
-);
+
+final settingsLocalDataSourceProvider = Provider<SettingsLocalDataSource>((ref) {
+  return SettingsLocalDataSourceImpl(ref.watch(sharedPreferencesProvider));
+});
+
+final settingsRepositoryProvider = Provider((ref) {
+  return SettingsRepositoryImpl(ref.watch(settingsLocalDataSourceProvider));
+});
+
+final baseCurrencyProvider = FutureProvider<String>((ref) async {
+  final repository = ref.watch(settingsRepositoryProvider);
+  final result = await repository.getBaseCurrency();
+  return result.fold(
+    (failure) => 'USD',
+    (currency) => currency,
+  );
+});
+
+final fontSizeProvider = FutureProvider<double>((ref) async {
+  final repository = ref.watch(settingsRepositoryProvider);
+  final result = await repository.getFontSize();
+  return result.fold(
+    (failure) => 16.0,
+    (size) => size,
+  );
+});
+
+
 
 class FontSizeNotifier extends StateNotifier<double> {
   final SettingsRepository repository;
