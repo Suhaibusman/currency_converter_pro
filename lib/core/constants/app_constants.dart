@@ -13,6 +13,20 @@ class AppConstants {
   // Exchange Rate API
   static const String exchangeRateApiBaseUrl = 'https://v6.exchangerate-api.com/v6';
   static const String exchangeRateApiEndpoint = '/latest';
+   static const String baseCurrencyKey = 'base_currency';
+  static const String homeCurrencyKey = 'home_currency';
+  // Storage Keys
+  static const String apiKeyKey = 'api_key';
+  static const String exchangeRatesKey = 'exchange_rates';
+  static const String lastUpdateKey = 'last_update';
+  static const String selectedCurrenciesKey = 'selected_currencies';
+  static const String themeKey = 'theme';
+  static const String customColorKey = 'custom_color';
+  static const String fontSizeKey = 'font_size';
+  static const String decimalPrecisionKey = 'decimal_precision';
+  static const String roundingModeKey = 'rounding_mode';
+  static const String biometricEnabledKey = 'biometric_enabled';
+  static const String languageKey = 'language';
   
   // Cache Keys
   static const String cacheKeyRates = 'cached_rates';

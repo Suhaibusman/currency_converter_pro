@@ -2,31 +2,36 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/error/exceptions.dart';
+import '../../models/currency_rate_model.dart';
 import '../../models/alert_model.dart';
 import '../../models/conversion_history_model.dart';
-import '../../models/currency_rate_model.dart';
 import '../../models/snapshot_model.dart';
 
 abstract class CurrencyLocalDataSource {
-  Future<void> cacheRates(CurrencyRateModel rates);
   Future<CurrencyRateModel> getCachedRates();
-  Future<int?> getLastUpdateTimestamp();
-  Future<void> saveSnapshot(SnapshotModel snapshot);
-  Future<List<SnapshotModel>> getSnapshots();
-  Future<void> addConversionHistory(ConversionHistoryModel history);
-  Future<List<ConversionHistoryModel>> getConversionHistory();
-  Future<void> clearConversionHistory();
-  Future<void> addAlert(AlertModel alert);
-  Future<List<AlertModel>> getAlerts();
-  Future<void> updateAlert(AlertModel alert);
-  Future<void> deleteAlert(String alertId);
-  Future<void> addFavoritePair(String pair);
-  Future<List<String>> getFavoritePairs();
-  Future<void> removeFavoritePair(String pair);
-  Future<void> addRecentSearch(String search);
-  Future<List<String>> getRecentSearches();
-  Future<String?> getCachedApiKey();
+  Future<void> cacheRates(CurrencyRateModel rates);
+  Future<int> getLastUpdateTimestamp();
+  Future<void> setLastUpdateTimestamp(int timestamp);
+  Future<String> getApiKey();
   Future<void> cacheApiKey(String apiKey);
+  
+  Future<List<ConversionHistoryModel>> getConversionHistory();
+  Future<void> addConversionHistory(ConversionHistoryModel history);
+  Future<void> clearConversionHistory();
+  
+  Future<List<SnapshotModel>> getSnapshots();
+  Future<void> saveSnapshot(SnapshotModel snapshot);
+  
+  Future<List<AlertModel>> getAlerts();
+  Future<void> saveAlert(AlertModel alert);
+  Future<void> deleteAlert(String alertId);
+  
+  Future<List<String>> getFavoritePairs();
+  Future<void> addFavoritePair(String pair);
+  Future<void> removeFavoritePair(String pair);
+  
+  Future<List<String>> getRecentSearches();
+  Future<void> addRecentSearch(String currency);
 }
 
 class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
@@ -35,15 +40,28 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
   CurrencyLocalDataSourceImpl(this.sharedPreferences);
 
   @override
+  Future<CurrencyRateModel> getCachedRates() async {
+    final jsonString = sharedPreferences.getString(AppConstants.exchangeRatesKey);
+    
+    if (jsonString == null) {
+      throw CacheException('No cached rates found');
+    }
+    
+    try {
+      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+      return CurrencyRateModel.fromJson(json);
+    } catch (e) {
+      throw CacheException('Failed to decode cached rates: $e');
+    }
+  }
+
+  @override
   Future<void> cacheRates(CurrencyRateModel rates) async {
     try {
+      final jsonString = jsonEncode(rates.toJson());
       await sharedPreferences.setString(
-        AppConstants.cacheKeyRates,
-        json.encode(rates.toJson()),
-      );
-      await sharedPreferences.setInt(
-        AppConstants.cacheKeyTimestamp,
-        rates.timestamp,
+        AppConstants.exchangeRatesKey,
+        jsonString,
       );
     } catch (e) {
       throw CacheException('Failed to cache rates: $e');
@@ -51,60 +69,46 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
   }
 
   @override
-  Future<CurrencyRateModel> getCachedRates() async {
-    try {
-      final cachedString = sharedPreferences.getString(AppConstants.cacheKeyRates);
-      
-      if (cachedString == null) {
-        throw const CacheException('No cached rates found');
-      }
+  Future<int> getLastUpdateTimestamp() async {
+    return sharedPreferences.getInt(AppConstants.lastUpdateKey) ?? 0;
+  }
 
-      final jsonData = json.decode(cachedString) as Map<String, dynamic>;
-      return CurrencyRateModel.fromJson(jsonData);
-    } catch (e) {
-      throw CacheException('Failed to get cached rates: $e');
+  @override
+  Future<void> setLastUpdateTimestamp(int timestamp) async {
+    await sharedPreferences.setInt(AppConstants.lastUpdateKey, timestamp);
+  }
+
+  @override
+  Future<String> getApiKey() async {
+    final apiKey = sharedPreferences.getString(AppConstants.apiKeyStorageKey);
+    
+    if (apiKey == null) {
+      throw CacheException('No API key found');
     }
+    
+    return apiKey;
   }
 
   @override
-  Future<int?> getLastUpdateTimestamp() async {
-    return sharedPreferences.getInt(AppConstants.cacheKeyTimestamp);
+  Future<void> cacheApiKey(String apiKey) async {
+    await sharedPreferences.setString(AppConstants.apiKeyStorageKey, apiKey);
   }
 
   @override
-  Future<void> saveSnapshot(SnapshotModel snapshot) async {
-    try {
-      final snapshots = await getSnapshots();
-      snapshots.add(snapshot);
-      
-      // Keep only last 365 days
-      if (snapshots.length > AppConstants.maxSnapshots) {
-        snapshots.removeRange(0, snapshots.length - AppConstants.maxSnapshots);
-      }
-
-      final jsonList = snapshots.map((s) => s.toJson()).toList();
-      await sharedPreferences.setString(
-        AppConstants.cacheKeySnapshots,
-        json.encode(jsonList),
-      );
-    } catch (e) {
-      throw CacheException('Failed to save snapshot: $e');
+  Future<List<ConversionHistoryModel>> getConversionHistory() async {
+    final jsonString = sharedPreferences.getString(AppConstants.conversionHistoryKey);
+    
+    if (jsonString == null) {
+      return [];
     }
-  }
-
-  @override
-  Future<List<SnapshotModel>> getSnapshots() async {
+    
     try {
-      final snapshotsString = sharedPreferences.getString(AppConstants.cacheKeySnapshots);
-      
-      if (snapshotsString == null) return [];
-
-      final jsonList = json.decode(snapshotsString) as List;
+      final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList
-          .map((json) => SnapshotModel.fromJson(json as Map<String, dynamic>))
+          .map((json) => ConversionHistoryModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw CacheException('Failed to get snapshots: $e');
+      throw CacheException('Failed to decode conversion history: $e');
     }
   }
 
@@ -114,18 +118,21 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
       final historyList = await getConversionHistory();
       historyList.insert(0, history);
       
-      // Keep only last 100
-      if (historyList.length > AppConstants.maxConversionHistory) {
+      // Keep only recent items
+      if (historyList.length > AppConstants.maxHistoryItems) {
         historyList.removeRange(
-          AppConstants.maxConversionHistory,
+          AppConstants.maxHistoryItems,
           historyList.length,
         );
       }
-
-      final jsonList = historyList.map((h) => h.toJson()).toList();
+      
+      final jsonString = jsonEncode(
+        historyList.map((h) => h.toJson()).toList(),
+      );
+      
       await sharedPreferences.setString(
-        AppConstants.cacheKeyConversionHistory,
-        json.encode(jsonList),
+        AppConstants.conversionHistoryKey,
+        jsonString,
       );
     } catch (e) {
       throw CacheException('Failed to add conversion history: $e');
@@ -133,81 +140,103 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
   }
 
   @override
-  Future<List<ConversionHistoryModel>> getConversionHistory() async {
-    try {
-      final historyString = sharedPreferences.getString(
-        AppConstants.cacheKeyConversionHistory,
-      );
-      
-      if (historyString == null) return [];
+  Future<void> clearConversionHistory() async {
+    await sharedPreferences.remove(AppConstants.conversionHistoryKey);
+  }
 
-      final jsonList = json.decode(historyString) as List;
+  @override
+  Future<List<SnapshotModel>> getSnapshots() async {
+    final jsonString = sharedPreferences.getString(AppConstants.snapshotsKey);
+    
+    if (jsonString == null) {
+      return [];
+    }
+    
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList
-          .map((json) =>
-              ConversionHistoryModel.fromJson(json as Map<String, dynamic>))
+          .map((json) => SnapshotModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw CacheException('Failed to get conversion history: $e');
+      throw CacheException('Failed to decode snapshots: $e');
     }
   }
 
   @override
-  Future<void> clearConversionHistory() async {
+  Future<void> saveSnapshot(SnapshotModel snapshot) async {
     try {
-      await sharedPreferences.remove(AppConstants.cacheKeyConversionHistory);
-    } catch (e) {
-      throw CacheException('Failed to clear conversion history: $e');
-    }
-  }
-
-  @override
-  Future<void> addAlert(AlertModel alert) async {
-    try {
-      final alerts = await getAlerts();
-      alerts.add(alert);
-
-      final jsonList = alerts.map((a) => a.toJson()).toList();
+      final snapshots = await getSnapshots();
+      
+      // Remove existing snapshot for the same date
+      snapshots.removeWhere((s) => 
+        s.date.year == snapshot.date.year &&
+        s.date.month == snapshot.date.month &&
+        s.date.day == snapshot.date.day
+      );
+      
+      snapshots.add(snapshot);
+      
+      // Keep only last 365 days
+      if (snapshots.length > 365) {
+        snapshots.sort((a, b) => b.date.compareTo(a.date));
+        snapshots.removeRange(365, snapshots.length);
+      }
+      
+      final jsonString = jsonEncode(
+        snapshots.map((s) => s.toJson()).toList(),
+      );
+      
       await sharedPreferences.setString(
-        AppConstants.cacheKeyAlerts,
-        json.encode(jsonList),
+        AppConstants.snapshotsKey,
+        jsonString,
       );
     } catch (e) {
-      throw CacheException('Failed to add alert: $e');
+      throw CacheException('Failed to save snapshot: $e');
     }
   }
 
   @override
   Future<List<AlertModel>> getAlerts() async {
+    final jsonString = sharedPreferences.getString(AppConstants.alertsKey);
+    
+    if (jsonString == null) {
+      return [];
+    }
+    
     try {
-      final alertsString = sharedPreferences.getString(AppConstants.cacheKeyAlerts);
-      
-      if (alertsString == null) return [];
-
-      final jsonList = json.decode(alertsString) as List;
+      final List<dynamic> jsonList = jsonDecode(jsonString);
       return jsonList
           .map((json) => AlertModel.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw CacheException('Failed to get alerts: $e');
+      throw CacheException('Failed to decode alerts: $e');
     }
   }
 
   @override
-  Future<void> updateAlert(AlertModel alert) async {
+  Future<void> saveAlert(AlertModel alert) async {
     try {
       final alerts = await getAlerts();
+      
+      // Check if alert with same ID exists
       final index = alerts.indexWhere((a) => a.id == alert.id);
       
       if (index != -1) {
         alerts[index] = alert;
-        final jsonList = alerts.map((a) => a.toJson()).toList();
-        await sharedPreferences.setString(
-          AppConstants.cacheKeyAlerts,
-          json.encode(jsonList),
-        );
+      } else {
+        alerts.add(alert);
       }
+      
+      final jsonString = jsonEncode(
+        alerts.map((a) => a.toJson()).toList(),
+      );
+      
+      await sharedPreferences.setString(
+        AppConstants.alertsKey,
+        jsonString,
+      );
     } catch (e) {
-      throw CacheException('Failed to update alert: $e');
+      throw CacheException('Failed to save alert: $e');
     }
   }
 
@@ -216,11 +245,14 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
     try {
       final alerts = await getAlerts();
       alerts.removeWhere((a) => a.id == alertId);
-
-      final jsonList = alerts.map((a) => a.toJson()).toList();
+      
+      final jsonString = jsonEncode(
+        alerts.map((a) => a.toJson()).toList(),
+      );
+      
       await sharedPreferences.setString(
-        AppConstants.cacheKeyAlerts,
-        json.encode(jsonList),
+        AppConstants.alertsKey,
+        jsonString,
       );
     } catch (e) {
       throw CacheException('Failed to delete alert: $e');
@@ -228,80 +260,65 @@ class CurrencyLocalDataSourceImpl implements CurrencyLocalDataSource {
   }
 
   @override
-  Future<void> addFavoritePair(String pair) async {
-    try {
-      final pairs = await getFavoritePairs();
-      if (!pairs.contains(pair)) {
-        pairs.add(pair);
-        await sharedPreferences.setStringList(
-          AppConstants.cacheKeyFavoritePairs,
-          pairs,
-        );
-      }
-    } catch (e) {
-      throw CacheException('Failed to add favorite pair: $e');
-    }
+  Future<List<String>> getFavoritePairs() async {
+    return sharedPreferences.getStringList(AppConstants.favoritePairsKey) ?? [];
   }
 
   @override
-  Future<List<String>> getFavoritePairs() async {
-    return sharedPreferences.getStringList(AppConstants.cacheKeyFavoritePairs) ?? [];
+  Future<void> addFavoritePair(String pair) async {
+    final pairs = await getFavoritePairs();
+    
+    if (!pairs.contains(pair)) {
+      pairs.add(pair);
+      
+      if (pairs.length > AppConstants.maxFavoritePairs) {
+        pairs.removeAt(0);
+      }
+      
+      await sharedPreferences.setStringList(
+        AppConstants.favoritePairsKey,
+        pairs,
+      );
+    }
   }
 
   @override
   Future<void> removeFavoritePair(String pair) async {
-    try {
-      final pairs = await getFavoritePairs();
-      pairs.remove(pair);
-      await sharedPreferences.setStringList(
-        AppConstants.cacheKeyFavoritePairs,
-        pairs,
-      );
-    } catch (e) {
-      throw CacheException('Failed to remove favorite pair: $e');
-    }
-  }
-
-  @override
-  Future<void> addRecentSearch(String search) async {
-    try {
-      final searches = await getRecentSearches();
-      searches.remove(search); // Remove if exists
-      searches.insert(0, search);
-      
-      // Keep only last 20
-      if (searches.length > AppConstants.maxRecentSearches) {
-        searches.removeRange(
-          AppConstants.maxRecentSearches,
-          searches.length,
-        );
-      }
-
-      await sharedPreferences.setStringList(
-        AppConstants.cacheKeyRecentSearches,
-        searches,
-      );
-    } catch (e) {
-      throw CacheException('Failed to add recent search: $e');
-    }
+    final pairs = await getFavoritePairs();
+    pairs.remove(pair);
+    
+    await sharedPreferences.setStringList(
+      AppConstants.favoritePairsKey,
+      pairs,
+    );
   }
 
   @override
   Future<List<String>> getRecentSearches() async {
-    return sharedPreferences.getStringList(AppConstants.cacheKeyRecentSearches) ?? [];
+    return sharedPreferences.getStringList(AppConstants.recentSearchesKey) ?? [];
   }
 
   @override
-  Future<String?> getCachedApiKey() async {
-    return sharedPreferences.getString(AppConstants.cacheKeyApiKey);
-  }
-
-  @override
-  Future<void> cacheApiKey(String apiKey) async {
-    try {
-      await sharedPreferences.setString(AppConstants.cacheKeyApiKey, apiKey);
-    } catch (e) {
-      throw CacheException('Failed to cache API key: $e');
+  Future<void> addRecentSearch(String currency) async {
+    final searches = await getRecentSearches();
+    
+    // Remove if already exists
+    searches.remove(currency);
+    
+    // Add to beginning
+    searches.insert(0, currency);
+    
+    // Keep only recent
+    if (searches.length > AppConstants.maxRecentSearches) {
+      searches.removeRange(
+        AppConstants.maxRecentSearches,
+        searches.length,
+      );
     }
+    
+    await sharedPreferences.setStringList(
+      AppConstants.recentSearchesKey,
+      searches,
+    );
   }
 }
